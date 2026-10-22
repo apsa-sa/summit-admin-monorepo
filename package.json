@@ -14,7 +14,8 @@
     "test": "tsx --test packages/testing/*.test.ts",
     "db:migrate": "tsx tooling/scripts/database.ts migrate",
     "db:seed": "tsx tooling/scripts/database.ts seed",
-    "check": "pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "audit:publication": "tsx tooling/scripts/publication-audit.ts"
   },
   "dependencies": {
     "pg": "8.23.1"

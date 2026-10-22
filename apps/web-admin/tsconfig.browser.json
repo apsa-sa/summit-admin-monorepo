@@ -10,7 +10,7 @@
     ],
     "types": [],
     "outDir": "public",
-    "rootDir": "browser",
+    "rootDir": "../..",
     "skipLibCheck": true
   },
   "include": [

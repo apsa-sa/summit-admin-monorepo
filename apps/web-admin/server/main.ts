@@ -4,6 +4,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { PostgresRepository } from '../../../packages/data-access/index.js';
+import { DatabaseConnectionPolicy } from '../../../packages/data-access/connection-policy.js';
 import { AuthorizationPolicy } from '../../../packages/core-rbac/index.js';
 import { Validation, DomainError } from '../../../packages/core/index.js';
 import { PasswordHasher, SessionToken, RateLimiter } from '../../../packages/security/index.js';
@@ -12,7 +13,7 @@ import { CsvExporter } from '../../../packages/exports/index.js';
 import { SafeLogger } from '../../../packages/observability/index.js';
 export class AdminServer {
  private readonly repository:PostgresRepository; private readonly policy=new AuthorizationPolicy(); private readonly tokens=new SessionToken(); private readonly limiter=new RateLimiter();private readonly logger=new SafeLogger();private readonly origin:string;
- constructor(){const url=process.env.DATABASE_URL;if(!url)throw new Error('DATABASE_URL is required');this.repository=new PostgresRepository(url);this.origin=process.env.APP_ORIGIN??'http://localhost:3210';}
+ constructor(){const url=process.env.DATABASE_URL;if(!url)throw new Error('DATABASE_URL is required');this.repository=new PostgresRepository(url,new DatabaseConnectionPolicy());this.origin=process.env.APP_ORIGIN??'http://localhost:3210';}
  private respond(res:ServerResponse,status:number,data:unknown):void {res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
  private async body(req:IncomingMessage):Promise<unknown>{if(!req.headers['content-type']?.startsWith('application/json'))throw new DomainError(415,'json_required');let body='';for await(const chunk of req){body+=String(chunk);if(Buffer.byteLength(body)>16384)throw new DomainError(413,'body_too_large');}try{const parsed:unknown=JSON.parse(body);return parsed;}catch{throw new DomainError(400,'invalid_json');}}
  private digest(req:IncomingMessage):string {const cookie=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('summit_session='));return this.tokens.digest(cookie?.slice('summit_session='.length)??'');}
@@ -22,7 +23,20 @@ export class AdminServer {
  if(!['GET','POST','PUT','DELETE'].includes(method))throw new DomainError(405,'method_not_allowed');
  if(method!=='GET'&&req.headers.origin!==this.origin)throw new DomainError(403,'invalid_origin');
  if(url.pathname==='/api/health'){await this.repository.pool.query('SELECT 1');this.respond(res,200,{status:'ok'});return;}
- if(!url.pathname.startsWith('/api/')){if(method!=='GET')throw new DomainError(405,'method_not_allowed');const files:Record<string,[string,string]>={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8']};const file=files[url.pathname];if(!file)throw new DomainError(404,'not_found');const bytes=await readFile(new URL('../public/'+file[0],import.meta.url));res.writeHead(200,{'Content-Type':file[1]});res.end(bytes);return;}
+ if(!url.pathname.startsWith('/api/')) {
+  if(method!=='GET')throw new DomainError(405,'method_not_allowed');
+  const files:Record<string,[string,string]> = {
+    '/':['index.html','text/html; charset=utf-8'],
+    '/app.js':['apps/web-admin/browser/app.js','text/javascript; charset=utf-8'],
+    '/api.js':['apps/web-admin/browser/api.js','text/javascript; charset=utf-8'],
+    '/localization.js':['apps/web-admin/browser/localization.js','text/javascript; charset=utf-8'],
+    '/style.css':['style.css','text/css; charset=utf-8'],
+  };
+  const file=files[url.pathname];
+  if(!file)throw new DomainError(404,'not_found');
+  const bytes=await readFile(new URL('../public/'+file[0],import.meta.url));
+  res.writeHead(200,{'Content-Type':file[1]});res.end(bytes);return;
+ }
  if(url.pathname==='/api/login'&&method==='POST'){this.limiter.check(req.socket.remoteAddress??'unknown');const input=Validation.record(await this.body(req));const email=Validation.text(input.email,254).toLowerCase();const password=Validation.text(input.password,128);const found=await this.repository.credentials(email);const hasher=new PasswordHasher();const dummy='00000000000000000000000000000000:'+ '0'.repeat(128);if(!hasher.verify(password,found?.hash??dummy)||!found)throw new DomainError(401,'invalid_credentials');const token=this.tokens.create();await this.repository.session(this.tokens.digest(token),found.user.id);res.setHeader('Set-Cookie',this.cookie(token));this.respond(res,200,{user:found.user});return;}
  const digest=this.digest(req);const actor=await new SessionService(this.repository).authenticate(digest);
  if(url.pathname==='/api/logout'&&method==='POST'){await this.repository.logout(digest);res.setHeader('Set-Cookie',this.cookie('',true));this.respond(res,200,{ok:true});return;}

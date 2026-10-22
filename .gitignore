@@ -5,3 +5,26 @@ dist/
 .turbo/
 *.log
 coverage/
+
+# Generated browser artifacts; produced by pnpm build
+apps/web-admin/public/apps/
+apps/web-admin/public/packages/
+apps/web-admin/public/api.js
+apps/web-admin/public/app.js
+apps/web-admin/public/localization.js
+
+# Never commit deployment secrets, database exports, or machine-local credentials.
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+.pgpass
+credentials.json
+service-account.json

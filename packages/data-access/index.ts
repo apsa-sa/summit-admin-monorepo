@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: MIT
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 import { randomUUID } from 'node:crypto';
+import { DatabaseConnectionPolicy } from './connection-policy.js';
 import type { Actor, User, UserPage, UserQuery, UserInput, Draft, AuditEvent } from '../contracts/index.js';
 import { DomainError, Validation } from '../core/index.js';
 import { AuthorizationPolicy } from '../core-rbac/index.js';
 interface UserRow extends QueryResultRow { id:string;name:string;email:string;role:unknown;status:unknown;version:unknown;created_at:Date;password_hash:string|null; }
 export class PostgresRepository {
   readonly pool: Pool;
-  constructor(url: string) { this.pool=new Pool({connectionString:url,max:8}); }
+  constructor(url: string, policy: DatabaseConnectionPolicy) { this.pool=new Pool(policy.configure(url)); }
   private user(row: UserRow): User { return {id:row.id,name:row.name,email:row.email,role:Validation.role(row.role),status:Validation.status(row.status),version:Validation.integer(row.version),createdAt:row.created_at.toISOString()}; }
   async actorForSession(digest:string):Promise<Actor|null> { const result=await this.pool.query<UserRow>("SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.digest=$1 AND s.expires_at>now() AND u.status='active'",[digest]);const row=result.rows[0]; return row?{id:row.id,role:Validation.role(row.role)}:null; }
   async credentials(email:string):Promise<{user:User;hash:string}|null> {const result=await this.pool.query<UserRow>("SELECT * FROM users WHERE email=$1 AND status='active'",[email]); const row=result.rows[0];return row?.password_hash?{user:this.user(row),hash:row.password_hash}:null;}
