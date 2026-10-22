@@ -99,3 +99,6 @@ export class LocaleFormatter {
 }
 export { WorkspaceMessages } from './workspace.js';
 export type { WorkspaceMessageKey } from './workspace.js';
+
+export { DocsMessages } from "./docs.js";
+export type { DocsMessageKey } from "./docs.js";

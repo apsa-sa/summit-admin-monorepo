@@ -30,6 +30,7 @@
     "apps/web-admin/next/**",
     "apps/web-admin/presentation/**",
     "apps/web-admin/proxy.ts",
-    "apps/web-admin/next.config.ts"
+    "apps/web-admin/next.config.ts",
+    "apps/docs/**"
   ]
 }

@@ -16,6 +16,7 @@
   },
   "globalDependencies": [
     "tooling/typescript/library.json",
-    "tooling/scripts/library-build.mjs"
+    "tooling/scripts/library-build.mjs",
+    "tooling/scripts/run-next.mjs"
   ]
 }

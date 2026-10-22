@@ -14,7 +14,7 @@ design tokens and localization packages. Follow the [reference admin run guide](
 [account guide](docs/development/account-preferences.md) and [saved table views](docs/development/table-views.md).
 Implementation/verification limits are tracked in [Phase D core](docs/verification/PHASE-D-CORE-2026-10-22.md),
 [table views](docs/verification/PHASE-D-TABLE-VIEWS-2026-10-22.md) and
-[account increment](docs/verification/PHASE-D-ACCOUNT-2026-10-22.md). The full release remains incomplete.
+[account increment](docs/verification/PHASE-D-ACCOUNT-2026-10-22.md). The full release remains incomplete. The [documentation/workbench guide](docs/development/documentation-app.md) covers `pnpm docs:dev` on port 3213.
 
 تطبيق الإدارة المرجعي يعمل ضمن فرع التطوير؛ دليل التشغيل أعلاه يوضح إعداد الأصل
 وقاعدة البيانات وبناء الحزم. بقية هذه الصفحة تحفظ وصف الأساس التاريخي، ولا تُغني

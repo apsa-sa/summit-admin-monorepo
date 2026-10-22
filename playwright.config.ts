@@ -7,6 +7,7 @@ export default defineConfig({
   globalSetup: './packages/testing/e2e/setup.ts',
   globalTeardown: './packages/testing/e2e/teardown.ts',
   webServer: [
+    { command: 'pnpm docs:start', url: 'http://127.0.0.1:3213', reuseExistingServer: false, timeout: 60000 },
     { command: 'pnpm admin:start', url: 'http://127.0.0.1:3212', env: { APP_ORIGIN: 'http://127.0.0.1:3212' }, reuseExistingServer: false, timeout: 60000 },
     { command: 'pnpm proof:start', url: 'http://127.0.0.1:3211', reuseExistingServer: false, timeout: 60000 },
     { command: 'pnpm dev', url: 'http://127.0.0.1:3210/api/health', env: { APP_ORIGIN: 'http://127.0.0.1:3210' }, reuseExistingServer: false, timeout: 60000 },

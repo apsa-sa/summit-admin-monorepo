@@ -25,7 +25,10 @@
     "test:packages": "node tooling/scripts/package-contract.mjs",
     "admin:build": "turbo run build --filter=@summit/web-admin",
     "admin:dev": "pnpm --filter @summit/web-admin dev",
-    "admin:start": "pnpm --filter @summit/web-admin start"
+    "admin:start": "pnpm --filter @summit/web-admin start",
+    "docs:build": "turbo run build --filter=@summit/docs",
+    "docs:dev": "pnpm --filter @summit/docs dev",
+    "docs:start": "pnpm --filter @summit/docs start"
   },
   "dependencies": {
     "pg": "8.23.1"

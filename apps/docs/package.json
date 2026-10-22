@@ -1,6 +1,24 @@
 {
   "name": "@summit/docs",
-  "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../tooling/scripts/run-next.mjs dev docs",
+    "build": "node ../../tooling/scripts/run-next.mjs build docs",
+    "start": "node ../../tooling/scripts/run-next.mjs start docs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@summit/ui": "workspace:*",
+    "@summit/localization": "workspace:*",
+    "@summit/design-tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
 }
