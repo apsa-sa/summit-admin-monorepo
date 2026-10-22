@@ -1,7 +1,8 @@
 <!-- © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid. SPDX-License-Identifier: MIT -->
 # ADR-0001 — Next.js App Router and class-only boundary
 
-**Status:** BLOCKED — requires owner architecture decision and a compatibility proof.
+**Status:** BOUNDED PROOF VERIFIED IN CI — owner acceptance and final-app integration pending.
+The initial blocked decision below is retained as historical context; see the authorized continuation.
 **Evidence baseline:** owner brief, checkpoint 176942e, Next.js App Router docs reviewed 2026-10-22.
 
 ## Mandatory constraints
@@ -26,7 +27,7 @@ References:
 - https://nextjs.org/docs/app/getting-started/server-and-client-components
 - https://react.dev/reference/react/Component
 
-## Decision pending
+## Original decision pending at the baseline
 
 1. Prove a fully class-only App Router implementation with an exact pinned
    Next.js/React compatibility matrix, including layout, page, route handlers,
@@ -70,9 +71,11 @@ Application code is class-based: `SessionProfileService`, `SessionController`,
 Only plain data crosses the server/client boundary; no service or repository
 instance is serialized. The original DOM proof remains intact and runnable.
 
-**Status: PROOF IMPLEMENTED — ACCEPTANCE PENDING.** Production build passed
-locally. SSR, hydration and PostgreSQL/browser integration are executable gates
-in the new CI job; their actual results must be reviewed before closing this ADR.
+**Status: BOUNDED PROOF VERIFIED — ACCEPTANCE PENDING.** Production build passed
+locally and CI run 39739417801 verified SSR, hydration, preferences and actual
+PostgreSQL-backed session/logout contracts on commit 714804c. See the stage
+report for exact counts. Owner acceptance and broader app integration remain
+open; the final branch head must pass CI again after follow-up changes.
 This proof does not deliver the final admin app, login UI, full reference journey,
 Tailwind integration, docs app, error-boundary behavior or all rendering modes.
 Revisit before extending the boundary or selecting additional UI libraries.

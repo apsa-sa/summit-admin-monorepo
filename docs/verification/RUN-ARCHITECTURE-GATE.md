@@ -18,7 +18,8 @@ For the bounded UI proof only:
 NEXT_TELEMETRY_DISABLED=1 pnpm proof:start
 ```
 
-Open `http://127.0.0.1:3211`. The original app remains `pnpm dev` on port 3210.
+The proof scripts also disable Next.js telemetry explicitly on the supported
+Linux/macOS targets. Open `http://127.0.0.1:3211`. The original app remains `pnpm dev` on port 3210.
 Without database/origin configuration the proof's session API returns 503;
 it never reports a successful authenticated state from a mock.
 

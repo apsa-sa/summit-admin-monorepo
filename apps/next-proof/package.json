@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack --hostname 127.0.0.1 --port 3211",
-    "build": "next build --webpack",
-    "start": "next start --hostname 127.0.0.1 --port 3211",
+    "dev": "NEXT_TELEMETRY_DISABLED=1 next dev --webpack --hostname 127.0.0.1 --port 3211",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build --webpack",
+    "start": "NEXT_TELEMETRY_DISABLED=1 next start --hostname 127.0.0.1 --port 3211",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

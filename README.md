@@ -70,7 +70,7 @@ Original authored code: [MIT](LICENSE); third-party licenses remain separate
 - **Added browser proof:** class-based DOM controllers and API client in
   `apps/web-admin/browser/`, with RTL/LTR, themes, protected operations,
   server drafts and localized interface. **Not** a Next.js App Router app.
-- **PROOF IN PROGRESS:** An isolated Next.js app with explicitly bounded
+- **BOUNDED PROOF VERIFIED IN CI:** An isolated Next.js app with explicitly bounded
   framework entries is now in `apps/next-proof`. Owner acceptance remains open; see
   [`ADR-0001`](docs/adr/0001-nextjs-class-boundary.md). The approved scope and each boundary are recorded there. This does not
   replace the original app or establish production readiness.

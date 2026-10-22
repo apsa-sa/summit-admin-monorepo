@@ -1,6 +1,6 @@
-'use client';
 // © 2026 APSA / eng:samer alhamid — apsa.sa, Arab Planets Summit Architectural.
 // SPDX-License-Identifier: MIT
+'use client';
 import { Component } from 'react';
 import type { ProofLocale, ProofTheme } from './preferences';
 

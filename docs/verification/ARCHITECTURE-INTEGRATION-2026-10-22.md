@@ -58,6 +58,26 @@ cloud service, existing database or production secret is accessed or modified.
 | Full accessibility / visual / 100k performance | NOT RUN | Not claimed by this proof |
 | Main merge / deployment / release | NOT RUN | Explicitly excluded |
 
+### Confirmed CI evidence
+
+[Run 39739417801](https://github.com/apsa-sa/summit-admin-monorepo/actions/runs/39739417801)
+on commit `714804cec34c222606c1d7b411e4b01fbf45e184` completed successfully.
+Both foundation and architecture/integration jobs passed. Retrieved job logs confirm:
+
+- 40/40 unit and HTTP-contract tests, zero failed/skipped.
+- PostgreSQL 17.6: 13 integration scenarios plus their parent suite (Node reports
+  14/14 tests), zero failed/skipped. These include the observed lock-wait
+  revocation race, rollback and independent database installation tests.
+- Next.js production build and 4/4 Playwright Chromium tests passed: SSR without
+  JavaScript, hydration and preference changes preserving input, 360px keyboard/
+  overflow checks, real session lookup/logout and cross-origin rejection.
+- Foundation publication, dependency and Gitleaks checks passed.
+
+The local BLOCKED entries above describe local environmental limits, not skipped
+CI gates. Final report/notice/telemetry-only follow-up changes require a fresh
+CI result on the final branch head before acceptance. No product readiness or
+full WCAG/cross-browser coverage is inferred from these limited tests.
+
 CI evidence is the job result on the uploaded commit, not this document's
 existence. A green foundation-only job does not replace the integration job.
 Failures block acceptance; no skip, continue-on-error, mocked PostgreSQL, or
@@ -104,3 +124,21 @@ secure uploads, demo analytics and developer docs. Verify remote provider TLS,
 least-privilege DB roles, proxy/origin policy, distributed rate limiting,
 backup/restore, licensing/SBOM, WCAG and performance. No claim of production
 readiness or v1.0 completion is made.
+
+## File inventory / الملفات المعدّلة
+
+- Framework proof: `apps/next-proof/` (four explicit framework entries, class
+  presentation/preferences, server controller/composition root, styles and config).
+- Application port/service: `packages/auth/profile-service.ts`.
+- Session-bound transactions: `packages/data-access/index.ts`; HTTP callers:
+  `apps/web-admin/server/main.ts`. Existing response contracts are preserved.
+- Verification: `packages/testing/profile.test.ts`, `packages/testing/integration/`,
+  `packages/testing/e2e/`, `packages/testing/support/`, `playwright.config.ts`.
+- Execution and reproducibility: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`,
+  `.gitignore`, `.github/workflows/ci.yml`.
+- Documentation: `README.md`, `THIRD_PARTY_NOTICES.md`, ADR-0001, publication
+  checklist and these two verification guides. Exact diff: draft PR #2.
+
+No deletion cleanup was performed: no unused-code hypothesis has been accepted
+as sufficient evidence to remove an original module. The webpack proof scripts
+explicitly disable Next.js telemetry for supported Linux/macOS commands.
