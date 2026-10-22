@@ -407,6 +407,10 @@ class NextAdminBrowserSuite {
       await expect(
         page.getByRole("button", { name: "إضافة مستخدم", exact: true }),
       ).toHaveCount(0);
+      await expect(page.locator("#admin-bulk-open")).toHaveCount(0);
+      await expect(
+        page.locator('.admin-users-table input[type="checkbox"]'),
+      ).toHaveCount(0);
       await expect(
         page
           .locator(".admin-sidebar nav")
@@ -529,6 +533,142 @@ class NextAdminBrowserSuite {
       expect((await page.request.get(`${this.origin}/api/me`)).status()).toBe(
         200,
       );
+    });
+    test("Next bulk status preserves per-record results, rejects a stale record, reloads before retry and audits real writes", async ({
+      page,
+    }) => {
+      await this.login(page, "admin", "en", "light");
+      await expect(
+        page.getByRole("button", { name: "Sign out", exact: true }),
+      ).toBeEnabled();
+      const prefix = `Bulk ${randomUUID().slice(0, 8)}`,
+        created = [];
+      for (const suffix of ["A", "B"]) {
+        const email = `${randomUUID()}@example.test`;
+        const response = await page.request.post(`${this.origin}/api/users`, {
+          headers: { origin: this.origin },
+          data: {
+            name: `${prefix} ${suffix}`,
+            email,
+            role: "viewer",
+            status: "active",
+            version: 0,
+          },
+        });
+        expect(response.status()).toBe(201);
+        created.push(this.cleanup.track(await response.json(), email));
+      }
+      const first = created[0],
+        second = created[1];
+      if (!first || !second) throw new Error("Missing owned bulk fixtures");
+      await page
+        .locator(".admin-sidebar nav")
+        .getByRole("link", { name: "Users", exact: true })
+        .click();
+      await page.locator("#admin-search").fill(prefix);
+      await page.getByRole("button", { name: "Search", exact: true }).click();
+      await page
+        .getByRole("columnheader", { name: "Name", exact: true })
+        .getByRole("button", { name: "Name", exact: true })
+        .click();
+      for (const user of created)
+        await page
+          .getByRole("checkbox", {
+            name: `Select user: ${user.name}`,
+            exact: true,
+          })
+          .check();
+      const stale = `${this.origin}/api/users/${second.id}`;
+      // A genuine concurrent server edit makes the selected snapshot stale.
+      expect(
+        (
+          await page.request.put(stale, {
+            headers: { origin: this.origin },
+            data: {
+              name: second.name,
+              email: second.email,
+              role: second.role,
+              status: second.status,
+              version: second.version,
+            },
+          })
+        ).status(),
+      ).toBe(200);
+      const rejected = page.waitForResponse(
+        (response) =>
+          response.url() === stale && response.request().method() === "PUT",
+      );
+      await page.locator("#admin-bulk-open").click();
+      await expect(page.locator("#admin-bulk-dialog")).toContainText(
+        first.name,
+      );
+      await expect(page.locator("#admin-bulk-dialog")).toContainText(
+        second.name,
+      );
+      await page
+        .locator("#admin-bulk-dialog")
+        .getByRole("button", { name: "Update selected status", exact: true })
+        .click();
+      const results = page.locator("#admin-bulk-results");
+      expect((await rejected).status()).toBe(409);
+      await expect(results.locator('[data-outcome="updated"]')).toHaveCount(1);
+      await expect(results.locator('[data-outcome="rejected"]')).toHaveCount(1);
+      await expect(results).toBeFocused();
+      const rowA = page
+          .locator(".admin-users-table tbody tr")
+          .filter({ hasText: first.name }),
+        rowB = page
+          .locator(".admin-users-table tbody tr")
+          .filter({ hasText: second.name });
+      await expect(rowA).toContainText("Suspended");
+      await expect(rowB).toContainText("Active");
+      await expect(
+        page.getByRole("checkbox", {
+          name: `Select user: ${first.name}`,
+          exact: true,
+        }),
+      ).toBeDisabled();
+      await page
+        .getByRole("checkbox", {
+          name: `Select user: ${second.name}`,
+          exact: true,
+        })
+        .check();
+      await page.locator("#admin-bulk-open").click();
+      await page
+        .locator("#admin-bulk-dialog")
+        .getByRole("button", { name: "Update selected status", exact: true })
+        .click();
+      await expect(results.locator('[data-outcome="updated"]')).toHaveCount(1);
+      await expect(results.locator('[data-outcome="rejected"]')).toHaveCount(0);
+      await expect(rowB).toContainText("Suspended");
+      const audit = new ResponseContracts().audit(
+        await (await page.request.get(`${this.origin}/api/audit`)).json(),
+      );
+      expect(
+        audit.filter(
+          (event) =>
+            event.action === "users:update" && event.resourceId === first.id,
+        ),
+      ).toHaveLength(1);
+      expect(
+        audit.filter(
+          (event) =>
+            event.action === "users:update" && event.resourceId === second.id,
+        ),
+      ).toHaveLength(2);
+      expect(
+        (
+          await new AxeBuilder({ page })
+            .include("#admin-content")
+            .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+            .analyze()
+        ).violations,
+      ).toEqual([]);
+      await page.screenshot({
+        path: "test-results/admin-bulk-en-light.png",
+        fullPage: true,
+      });
     });
     test("Next offline draft preserves edits and explicit retry; preferences survive mobile reload and 200% text", async ({
       page,

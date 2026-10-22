@@ -14,6 +14,7 @@ import { WorkspaceController } from "./controller.js";
 import { DraftPresenter } from "./draft-presenter.js";
 import { BrowserNavigation, BrowserPreferences } from "./browser-adapters.js";
 import { TablePreferenceController } from "./table-preferences.js";
+import { BulkUserController } from "./bulk-users.js";
 export class WorkspaceCompositionRoot {
   create(
     locale: Locale,
@@ -36,6 +37,7 @@ export class WorkspaceCompositionRoot {
       new BrowserPreferences(),
       new AuthorizationPolicy(),
       new TablePreferenceController(store, api, drafts),
+      new BulkUserController(store, api, drafts, new AuthorizationPolicy()),
     );
   }
 }

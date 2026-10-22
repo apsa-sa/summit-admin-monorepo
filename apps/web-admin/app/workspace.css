@@ -271,3 +271,13 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.admin-bulk {
+  margin-block: var(--summit-space-4);
+  padding-block: var(--summit-space-4);
+  border-block: 1px solid var(--summit-border);
+}
+.admin-bulk li {
+  margin-block: var(--summit-space-2);
+  overflow-wrap: anywhere;
+}

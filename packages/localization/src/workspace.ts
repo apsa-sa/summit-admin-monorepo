@@ -1,6 +1,18 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import type { Locale } from "./index.js";
 const en = Object.freeze({
+  bulkTitle: "Selected users",
+  bulkTarget: "New status",
+  bulkApply: "Update selected status",
+  bulkHint: "Up to 8 records from this page. Each record is saved independently. Review per-record results; no automatic retries.",
+  bulkConfirm: "Confirm selected status updates",
+  bulkStop: "Stop after current request",
+  bulkStopping: "Stopping after current request…",
+  bulk_updated: "Updated on server",
+  bulk_rejected: "Rejected by server",
+  bulk_unconfirmed: "Unconfirmed — reload before retrying",
+  bulk_not_attempted: "Not attempted",
+  selectUser: "Select user",
   accountEdit: "Edit account profile",
   capabilities: "Current role capabilities",
   capabilityHint: "These are role-level capabilities. Record-specific restrictions and every server check still apply. Roles are managed through authorized user edits.",
@@ -103,6 +115,18 @@ const en = Object.freeze({
 });
 export type WorkspaceMessageKey = keyof typeof en;
 const ar: Readonly<Record<WorkspaceMessageKey, string>> = Object.freeze({
+  bulkTitle: "المستخدمون المحددون",
+  bulkTarget: "الحالة الجديدة",
+  bulkApply: "تحديث حالة المحددين",
+  bulkHint: "حتى 8 سجلات من هذه الصفحة. يُحفظ كل سجل مستقلاً. راجع نتيجة كل سجل؛ لا توجد إعادة محاولة تلقائية.",
+  bulkConfirm: "تأكيد تحديث حالة المحددين",
+  bulkStop: "إيقاف بعد الطلب الجاري",
+  bulkStopping: "جارٍ الإيقاف بعد الطلب الحالي…",
+  bulk_updated: "حُدّث في الخادم",
+  bulk_rejected: "رفضه الخادم",
+  bulk_unconfirmed: "غير مؤكد — أعد التحميل قبل المحاولة",
+  bulk_not_attempted: "لم تُجرَ محاولة",
+  selectUser: "تحديد المستخدم",
   accountEdit: "تعديل بيانات الحساب",
   capabilities: "صلاحيات الدور الحالي",
   capabilityHint: "هذه صلاحيات على مستوى الدور؛ تبقى قيود السجل وفحوص الخادم مطبّقة. تُدار الأدوار من تعديل المستخدم المصرّح به.",

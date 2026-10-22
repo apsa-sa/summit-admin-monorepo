@@ -38,12 +38,14 @@ for the real production Next.js consumer. This gallery is not the final admin.
 | Drawer | Dialog contract; logical end placement, explicit locale/theme for top-layer display |
 | Toast | children, closeLabel, onClose, optional tone info/success/error; persistent controlled lifetime |
 | Tabs | Stable id/label/items/activeId/onChange/direction; unique item IDs; enabled active item; arrows/Home/End move focus; Enter/Space activate |
-| Table&lt;Row&gt; | caption/typed columns/rows/rowKey/loadingLabel/emptyLabel/retryLabel; optional loading/error/onRetry/sort/onSort/selected/selectionLabel/onSelect; unique keys |
+| Table&lt;Row&gt; | caption/typed columns/rows/rowKey/loadingLabel/emptyLabel/retryLabel; optional loading/error/onRetry/sort/onSort/selected/selectionLabel/canSelect/selectionDisabled/onSelect; unique keys |
 | Pagination | Finite safe integers page/pageSize/total, label/previousLabel/nextLabel/formatNumber/onChange, optional disabled; rejects invalid range |
 
 Full exported Props interfaces are generated in `dist/*.d.ts`; no `any` escape
 hatches. Table renders only the page supplied by the consumer. Fetching, filtering,
 permissions, retry policy and selection persistence belong to application classes.
+`canSelect(row)` defaults to eligible; `selectionDisabled`/loading disables activation.
+These presentation controls never replace server authorization.
 A visible button must be connected to a real consumer action. Supply translated
 labels and an explicit locale root; tokens use logical CSS and reduced motion.
 

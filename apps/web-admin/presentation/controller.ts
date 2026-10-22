@@ -20,6 +20,7 @@ import type {
   WorkspacePreferenceWriter,
 } from "./ports.js";
 /** View orchestration only; server services remain authoritative for every mutation. */
+import type { BulkUserController } from "./bulk-users.js";
 export class WorkspaceController {
   private sequence = 0;
   constructor(
@@ -30,6 +31,7 @@ export class WorkspaceController {
     private readonly preferences: WorkspacePreferenceWriter,
     private readonly policy: AuthorizationPolicy,
     readonly table: TablePreferenceController,
+    readonly bulk: BulkUserController,
   ) {}
   can(action: string, resource?: User, input?: UserInput): boolean {
     const actor = this.store.snapshot.user;
@@ -61,6 +63,7 @@ export class WorkspaceController {
     this.store.patch({ message: this.message(error), error: true });
   }
   private invalidate(): void {
+    this.bulk.stop();
     this.store.advanceEpoch();
     this.sequence++;
     this.api.endSession();
@@ -100,6 +103,8 @@ export class WorkspaceController {
     this.store.patch({ offline: false });
   };
   private pop = (): void => {
+    this.bulk.stop();
+    this.bulk.clear();
     this.readLocation();
     void this.load();
   };
@@ -136,6 +141,8 @@ export class WorkspaceController {
   }
   navigate(view: ViewName): void {
     if (!this.destinations().includes(view)) return;
+    this.bulk.stop();
+    this.bulk.clear();
     this.store.patch({
       view,
       mobile: false,
@@ -149,6 +156,8 @@ export class WorkspaceController {
     void this.load();
   }
   queryChanged(value: Partial<UserQuery>, load = false): void {
+    this.bulk.stop();
+    this.bulk.clear();
     const query = { ...this.store.snapshot.query, ...value };
     this.store.patch({ query });
     if (load) {
@@ -216,6 +225,7 @@ export class WorkspaceController {
     if (!s.user) return;
     const generation = this.store.epoch,
       sequence = ++this.sequence;
+    this.bulk.clear();
     this.store.patch({ loading: false });
     if (s.view === "drafts") {
       await this.drafts.load();
@@ -250,6 +260,17 @@ export class WorkspaceController {
       if (generation === this.store.epoch && sequence === this.sequence)
         this.store.patch({ loading: false });
     }
+  }
+  async applyBulk(): Promise<void> {
+    if (this.store.snapshot.busy || !this.store.snapshot.bulk.confirm) return;
+    const epoch = this.store.epoch;
+    await this.bulk.run();
+    if (
+      epoch === this.store.epoch &&
+      this.store.snapshot.user &&
+      this.store.snapshot.view === "users"
+    )
+      await this.load();
   }
   edit(user: User | null): void {
     this.store.patch({ editing: user, formError: "" });

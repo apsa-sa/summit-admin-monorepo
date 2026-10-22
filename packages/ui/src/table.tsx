@@ -27,6 +27,9 @@ export interface TableProps<Row> {
   readonly onSort?: (column: string) => void;
   readonly selected?: ReadonlySet<string>;
   readonly selectionLabel?: (row: Row) => string;
+  /** Presentation supplies row eligibility; the component never performs authorization. */
+  readonly canSelect?: (row: Row) => boolean;
+  readonly selectionDisabled?: boolean;
   readonly onSelect?: (key: string, selected: boolean) => void;
 }
 /** Renders the supplied page; fetching and permissions belong to application services. */
@@ -121,6 +124,11 @@ export class Table<Row> extends Component<TableProps<Row>> {
                         <Checkbox
                           label={p.selectionLabel?.(row)}
                           checked={p.selected?.has(key) ?? false}
+                          disabled={
+                            p.loading ||
+                            p.selectionDisabled ||
+                            (p.canSelect ? !p.canSelect(row) : false)
+                          }
                           onChange={(event) =>
                             p.onSelect?.(key, event.target.checked)
                           }

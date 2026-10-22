@@ -10,6 +10,8 @@ import type {
 } from "../../../packages/contracts/index.js";
 import type { UserTablePreferences } from "../../../packages/contracts/table-preferences.js";
 import { TablePreferenceValidation } from "../../../packages/core/table-preferences.js";
+import { BulkStateModel } from "./bulk-state.js";
+import type { BulkState } from "./bulk-state.js";
 export type ViewName = "overview" | "users" | "drafts" | "audit" | "settings";
 export interface WorkspaceState {
   readonly locale: Locale;
@@ -37,6 +39,7 @@ export interface WorkspaceState {
   readonly mobile: boolean;
   readonly collapsed: boolean;
   readonly logoutFailed: boolean;
+  readonly bulk: BulkState;
   readonly tablePreferences: UserTablePreferences;
   readonly tableBusy: boolean;
   readonly tableReady: boolean;
@@ -84,6 +87,7 @@ export class WorkspaceStore {
       mobile: false,
       collapsed: false,
       logoutFailed: false,
+      bulk: new BulkStateModel().defaults(),
       tablePreferences: new TablePreferenceValidation().defaults(),
       tableBusy: false,
       tableReady: false,
@@ -104,6 +108,7 @@ export class WorkspaceStore {
       busy: false,
       booting: false,
       logoutFailed: false,
+      bulk: new BulkStateModel().defaults(),
       tablePreferences: new TablePreferenceValidation().defaults(),
       tableBusy: false,
       tableReady: false,

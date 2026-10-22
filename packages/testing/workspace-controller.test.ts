@@ -13,6 +13,7 @@ import type { User,UserPage,UserInput,Draft,AuditEvent } from '../contracts/inde
 import { TablePreferenceController } from '../../apps/web-admin/presentation/table-preferences.js';
 import { TablePreferenceValidation } from '../core/table-preferences.js';
 import type { UserTablePreferences } from '../contracts/table-preferences.js';
+import { BulkUserController } from "../../apps/web-admin/presentation/bulk-users.js";
 class Deferred<T> {
   readonly promise:Promise<T>;private complete:(value:T)=>void=()=>{};
   constructor(){this.promise=new Promise(resolve=>{this.complete=resolve;});}
@@ -43,7 +44,7 @@ class WorkspaceControllerSuite {
     const presenter=new DraftPresenter(store,()=>api.endSession());
     const drafts=new DraftAutosaveController(api,presenter,{schedule:()=>{},cancel:()=>{}});
     const navigation:WorkspaceNavigation={read:()=>({view:'settings',query:store.snapshot.query}),write:()=>{},url:()=>'/'};
-    const controller=new WorkspaceController(store,api,drafts,navigation,{apply:()=>{}},new AuthorizationPolicy(),new TablePreferenceController(store,api,drafts));
+    const controller=new WorkspaceController(store,api,drafts,navigation,{apply:()=>{}},new AuthorizationPolicy(),new TablePreferenceController(store,api,drafts),new BulkUserController(store,api,drafts,new AuthorizationPolicy()));
     return {api,store,controller,presenter};
   }
   private page(user:User,page:number):UserPage{return {rows:[user],total:16,page,pageSize:8};}

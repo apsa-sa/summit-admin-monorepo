@@ -13,6 +13,7 @@ import type { TableColumn } from "@summit/ui";
 import type { User } from "../../../../packages/contracts/index.js";
 import { WorkspaceScreen } from "./screen.js";
 import { TablePreferencesPanel } from "./table-preferences.js";
+import { BulkUsersPanel } from "./bulk-users.js";
 export class UsersScreen extends WorkspaceScreen {
   override render(): ReactNode {
     const { state: s, controller: c } = this.props,
@@ -64,13 +65,18 @@ export class UsersScreen extends WorkspaceScreen {
           return (
             <div className="admin-actions">
               {c.can("users:update", user, input) && (
-                <Button variant="secondary" onClick={() => c.edit(user)}>
+                <Button
+                  variant="secondary"
+                  disabled={s.busy}
+                  onClick={() => c.edit(user)}
+                >
                   {m.t("edit")}
                 </Button>
               )}
               {c.can("users:delete", user) && (
                 <Button
                   variant="danger"
+                  disabled={s.busy}
                   onClick={() => c.store.patch({ removing: user })}
                 >
                   {m.t("remove")}
@@ -149,6 +155,7 @@ export class UsersScreen extends WorkspaceScreen {
           </Button>
         </form>
         <TablePreferencesPanel {...this.props} />
+        <BulkUsersPanel {...this.props} />
         <div className="admin-users-table">
           <Table<User>
             caption={m.t("users")}
@@ -158,6 +165,17 @@ export class UsersScreen extends WorkspaceScreen {
                 column.id === "actions" ||
                 s.tablePreferences.columns.some((id) => id === column.id),
             )}
+            {...(c.bulk.available()
+              ? {
+                  selected: s.bulk.selected,
+                  selectionLabel: (user: User) =>
+                    `${m.t("selectUser")}: ${user.name}`,
+                  canSelect: (user: User) => c.bulk.eligible(user),
+                  selectionDisabled: s.busy,
+                  onSelect: (id: string, selected: boolean) =>
+                    c.bulk.toggle(id, selected),
+                }
+              : {})}
             rowKey={(user) => user.id}
             loading={s.loading}
             loadingLabel={m.t("loading")}
