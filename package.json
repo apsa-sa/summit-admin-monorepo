@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node --import tsx apps/web-admin/server/main.ts",
-    "build": "pnpm build:packages && tsc --noEmit && tsc -p apps/web-admin/tsconfig.browser.json",
+    "build": "pnpm build:packages && tsc --noEmit && tsc -p apps/web-admin/tsconfig.browser.json && node --experimental-vm-modules --import tsx tooling/scripts/browser-asset-contract.ts",
     "typecheck": "pnpm build:packages && tsc --noEmit",
     "test": "pnpm build:packages && node --import tsx --test packages/testing/*.test.ts",
     "db:migrate": "node --import tsx tooling/scripts/database.ts migrate",
