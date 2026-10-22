@@ -1,0 +1,109 @@
+/* © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT */
+body {
+  margin: 0;
+}
+.docs-shell {
+  min-block-size: 100dvh;
+}
+.docs-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--summit-space-4);
+  padding: min(var(--summit-space-6), 4vw);
+  border-block-end: 1px solid var(--summit-border);
+  background: var(--summit-surface);
+}
+.docs-brand {
+  color: var(--summit-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.docs-topbar nav,
+.docs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--summit-space-3);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.docs-topbar a {
+  color: var(--summit-primary);
+  padding-block: var(--summit-space-2);
+}
+.docs-main,
+.docs-shell footer {
+  max-inline-size: 78rem;
+  margin-inline: auto;
+  padding: min(var(--summit-space-6), 4vw);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.docs-main h1 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1.4;
+}
+.docs-card {
+  margin-block: var(--summit-space-6);
+  padding: min(var(--summit-space-6), 4vw);
+}
+.docs-card pre,
+.summit-drawer pre {
+  max-inline-size: 100%;
+  overflow: auto;
+  padding: var(--summit-space-3);
+  background: var(--summit-muted);
+  border-radius: var(--summit-radius-sm);
+  direction: ltr;
+  text-align: start;
+}
+.docs-card .summit-field {
+  max-inline-size: 40rem;
+  min-inline-size: 0;
+}
+.docs-card .summit-input {
+  min-inline-size: 0;
+}
+.docs-actions > .summit-button {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.docs-example .docs-actions {
+  margin-block: var(--summit-space-4);
+}
+.docs-contract-list {
+  display: grid;
+  gap: var(--summit-space-3);
+  direction: ltr;
+}
+.docs-shell footer {
+  border-block-start: 1px solid var(--summit-border);
+  font-size: 0.875rem;
+}
+.docs-skip {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: var(--summit-space-3);
+  transform: translateY(-150%);
+  z-index: var(--summit-layer-overlay);
+  max-inline-size: calc(100% - 2rem);
+  padding: var(--summit-space-3);
+  background: var(--summit-surface);
+  color: var(--summit-primary);
+}
+.docs-skip:focus {
+  transform: translateY(0);
+}
+
+.docs-example .summit-table {
+  min-inline-size: 38rem;
+}
+
+.docs-example .summit-table th {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}

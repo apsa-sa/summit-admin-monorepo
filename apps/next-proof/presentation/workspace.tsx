@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 'use client';
 import { Component } from 'react';
+import { UiPackageShowcase } from './ui-showcase';
 import type { ProofLocale, ProofTheme } from './preferences';
 
 interface Props { locale: ProofLocale; theme: ProofTheme; }
@@ -66,6 +67,7 @@ export class ProofWorkspace extends Component<Props, State> {
         </article>
         <aside className="principles"><p className="eyebrow">02 / FOUNDATION</p><h2>{text.title}</h2><ul><li>{text.foundation}</li><li>{text.isolation}</li><li>{text.ownership}</li></ul></aside>
       </section>
+      <UiPackageShowcase locale={this.state.locale} theme={this.state.theme} />
       <footer>© 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.</footer>
     </main>;
   }

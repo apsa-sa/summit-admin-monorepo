@@ -175,3 +175,9 @@ service-account.json
 apps/next-proof/next-env.d.ts
 test-results/
 playwright-report/
+
+# Generated Next.js admin declarations
+apps/web-admin/next-env.d.ts
+
+# Generated documentation app declarations
+apps/docs/next-env.d.ts

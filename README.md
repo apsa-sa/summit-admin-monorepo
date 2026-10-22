@@ -7,6 +7,19 @@ Architecture/integration continuation: [stage report](docs/verification/ARCHITEC
 The original checkpoints below are historical records; they do not describe the latest GitHub/CI state.
 **الحالة: أساس تطويري غير معتمد للنشر الإنتاجي.**
 
+## Current reference app / التطبيق المرجعي الحالي
+
+The development branch includes a class-based Next.js admin consuming built UI,
+design tokens and localization packages. Follow the [reference admin run guide](docs/development/reference-admin.md),
+[account guide](docs/development/account-preferences.md) and [saved table views](docs/development/table-views.md).
+Implementation/verification limits are tracked in [Phase D core](docs/verification/PHASE-D-CORE-2026-10-22.md),
+[table views](docs/verification/PHASE-D-TABLE-VIEWS-2026-10-22.md) and
+[account increment](docs/verification/PHASE-D-ACCOUNT-2026-10-22.md). The full release remains incomplete. The [documentation/workbench guide](docs/development/documentation-app.md) covers `pnpm docs:dev` on port 3213.
+
+تطبيق الإدارة المرجعي يعمل ضمن فرع التطوير؛ دليل التشغيل أعلاه يوضح إعداد الأصل
+وقاعدة البيانات وبناء الحزم. بقية هذه الصفحة تحفظ وصف الأساس التاريخي، ولا تُغني
+عن تقارير الالتزام الحالي أو تمثل اعتماداً إنتاجياً.
+
 ## Original repository charter / التعريف الأصلي
 
 The original `main` README described the intended project as:

@@ -1,0 +1,283 @@
+/* © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT */
+body {
+  margin: 0;
+}
+.admin-shell {
+  min-block-size: 100dvh;
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+}
+.admin-sidebar {
+  padding: var(--summit-space-6);
+  background: var(--summit-surface);
+  border-inline-end: 1px solid var(--summit-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--summit-space-8);
+}
+.admin-brand {
+  color: var(--summit-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+.admin-brand span {
+  white-space: nowrap;
+}
+.admin-sidebar nav,
+.admin-command-list {
+  display: grid;
+  gap: var(--summit-space-2);
+}
+.admin-sidebar nav a,
+.summit-dialog nav a {
+  display: block;
+  color: var(--summit-foreground);
+  text-decoration: none;
+  padding: var(--summit-space-3);
+  border-radius: var(--summit-radius-sm);
+}
+.admin-sidebar nav a:hover,
+.summit-dialog nav a:hover {
+  background: var(--summit-muted);
+}
+.admin-sidebar nav a[aria-current="page"] {
+  background: var(--summit-primary);
+  color: var(--summit-on-primary);
+}
+.admin-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--summit-space-4);
+  padding: var(--summit-space-4) var(--summit-space-6);
+  border-block-end: 1px solid var(--summit-border);
+  background: var(--summit-surface);
+}
+.admin-main {
+  min-inline-size: 0;
+}
+#admin-content {
+  padding: var(--summit-space-6);
+}
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--summit-space-2);
+  align-items: center;
+}
+.admin-card {
+  background: var(--summit-surface);
+  border: 1px solid var(--summit-border);
+  border-radius: var(--summit-radius-lg);
+  padding: var(--summit-space-6);
+  margin-block-end: var(--summit-space-4);
+  min-inline-size: 0;
+}
+.admin-card h2 {
+  margin-block-start: 0;
+}
+.admin-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--summit-space-4);
+}
+.admin-filters {
+  display: grid;
+  grid-template-columns: minmax(8rem, 2fr) repeat(2, minmax(6rem, 1fr)) auto;
+  gap: var(--summit-space-3);
+  align-items: end;
+  margin-block-end: var(--summit-space-4);
+}
+.admin-filters .summit-field {
+  margin-block: 0;
+}
+.admin-action-link {
+  color: var(--summit-primary);
+  padding: var(--summit-space-2);
+}
+.admin-metric {
+  font-size: 3rem;
+}
+.admin-main footer {
+  padding: var(--summit-space-6);
+  font-size: 0.75rem;
+  color: var(--summit-secondary);
+}
+.admin-skip {
+  position: fixed;
+  inset-inline-start: var(--summit-space-4);
+  inset-block-start: -8rem;
+  z-index: var(--summit-layer-overlay);
+  padding: var(--summit-space-3);
+  background: var(--summit-surface);
+  color: var(--summit-primary);
+}
+.admin-skip:focus {
+  inset-block-start: var(--summit-space-4);
+}
+.admin-login {
+  min-block-size: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.admin-login-brand {
+  padding: clamp(1.5rem, 6vw, 6rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--summit-space-8);
+  background: var(--summit-muted);
+}
+.admin-login-brand h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.4;
+}
+.admin-login-form {
+  inline-size: min(100%, 34rem);
+  margin: auto;
+  padding: var(--summit-space-8);
+}
+.admin-copyright {
+  font-size: 0.75rem;
+  margin-block-start: var(--summit-space-8);
+  color: var(--summit-secondary);
+}
+.admin-command-list {
+  list-style: none;
+  padding: 0;
+}
+.admin-mobile-trigger {
+  display: none;
+}
+.admin-shell[data-collapsed="true"] {
+  grid-template-columns: 11rem minmax(0, 1fr);
+}
+@media (max-width: 1100px) {
+  .admin-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .admin-shell,
+  .admin-shell[data-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-sidebar {
+    display: none;
+  }
+  .admin-mobile-trigger {
+    display: inline-flex;
+  }
+  .admin-login {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-login-brand {
+    padding: var(--summit-space-6);
+    gap: var(--summit-space-4);
+  }
+  .admin-login-brand h1 {
+    font-size: 2rem;
+  }
+  .admin-login-form {
+    padding: var(--summit-space-6);
+  }
+  #admin-content,
+  .admin-card {
+    padding: var(--summit-space-4);
+  }
+  .admin-topbar {
+    padding: var(--summit-space-4);
+  }
+}
+@media (max-width: 420px) {
+  .admin-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-topbar h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+/* Reflow at 200%: allow intrinsic flex/grid widths to shrink and compound actions to wrap. */
+.admin-actions {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.admin-actions > .summit-button {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.admin-main,
+.admin-login-brand,
+.admin-login-form {
+  overflow-wrap: anywhere;
+}
+.admin-card .summit-field,
+.admin-login-form .summit-field {
+  min-inline-size: 0;
+}
+.admin-main .summit-input,
+.admin-login-form .summit-input {
+  min-inline-size: 0;
+}
+
+/* Preserve complete short Arabic labels; only the named table region scrolls on narrow screens. */
+.admin-users-table .summit-table {
+  min-inline-size: 56rem;
+}
+.admin-users-table .summit-table th,
+.admin-table-short {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.admin-table-preferences {
+  margin-block: var(--summit-space-4);
+}
+.admin-table-preferences summary {
+  cursor: pointer;
+  padding-block: var(--summit-space-3);
+}
+.admin-table-preferences fieldset {
+  min-inline-size: 0;
+  border: 1px solid var(--summit-border);
+  margin-block: var(--summit-space-3);
+}
+.summit-table-scroll:focus-visible {
+  outline: 2px solid var(--summit-focus);
+  outline-offset: 2px;
+}
+
+.admin-account-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--summit-space-3);
+}
+.admin-account-details dt {
+  font-weight: 600;
+}
+.admin-account-details dd {
+  margin-inline-start: 0;
+  min-inline-size: 0;
+}
+@media (max-width: 420px) {
+  .admin-account-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-bulk {
+  margin-block: var(--summit-space-4);
+  padding-block: var(--summit-space-4);
+  border-block: 1px solid var(--summit-border);
+}
+.admin-bulk li {
+  margin-block: var(--summit-space-2);
+  overflow-wrap: anywhere;
+}

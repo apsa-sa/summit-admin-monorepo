@@ -5,7 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 importers:
-
   .:
     dependencies:
       pg:
@@ -30,10 +29,31 @@ importers:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
-
-  apps/docs: {}
-
-  apps/next-proof:
+      '@summit/design-tokens':
+        specifier: workspace:*
+        version: link:packages/design-tokens
+      '@summit/localization':
+        specifier: workspace:*
+        version: link:packages/localization
+      '@summit/ui':
+        specifier: workspace:*
+        version: link:packages/ui
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@axe-core/playwright':
+        specifier: 4.14.0
+        version: 4.14.0(playwright-core@1.64.1)
+  apps/docs:
     dependencies:
       next:
         specifier: 16.4.2
@@ -44,6 +64,15 @@ importers:
       react-dom:
         specifier: 19.3.1
         version: 19.3.1(react@19.3.1)
+      '@summit/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@summit/localization':
+        specifier: workspace:*
+        version: link:../../packages/localization
+      '@summit/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
     devDependencies:
       '@types/react':
         specifier: 19.3.0
@@ -51,36 +80,96 @@ importers:
       '@types/react-dom':
         specifier: 19.3.0
         version: 19.3.0(@types/react@19.3.0)
-
-  apps/web-admin: {}
-
+  apps/next-proof:
+    dependencies:
+      next: &id001
+        specifier: 16.4.2
+        version: 16.4.2(@playwright/test@1.64.1)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react: &id002
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom: &id003
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
+      '@summit/ui': &id004
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@summit/localization': &id005
+        specifier: workspace:*
+        version: link:../../packages/localization
+    devDependencies:
+      '@types/react': &id006
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom': &id007
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+  apps/web-admin:
+    dependencies:
+      next: *id001
+      react: *id002
+      react-dom: *id003
+      '@summit/ui': *id004
+      '@summit/localization': *id005
+      '@summit/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
+    devDependencies:
+      '@types/react': *id006
+      '@types/react-dom': *id007
   packages/application: {}
-
   packages/auth: {}
-
   packages/contracts: {}
-
   packages/core: {}
-
   packages/core-rbac: {}
-
   packages/data-access: {}
-
-  packages/design-tokens: {}
-
+  packages/design-tokens:
+    dependencies:
+      '@fontsource/noto-sans-arabic':
+        specifier: 5.2.8
+        version: 5.2.8
   packages/exports: {}
-
   packages/localization: {}
-
   packages/observability: {}
-
   packages/security: {}
-
   packages/testing: {}
-
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      '@summit/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
+    devDependencies:
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
 
 packages:
+
+  '@axe-core/playwright@4.14.0':
+    resolution:
+      integrity: sha512-SGUhG5PIHd2eMdpgBF2PyQLOhX+qyDR2PT4cmoS4Qk2ak+jX/rrSvst9l0PGv5WTHolKpUMvVmoHpr4cZgf1RQ==
+    engines:
+      node: '>=22.12.0'
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
+  axe-core@4.14.0:
+    resolution:
+      integrity: sha512-9WTZxEjsZ7b13TH8JPmbV2z8CHbl80/2hm3XPEG4JgNdQLK81IBRXmSxHfMAOkSqQeRxT/0dwNDz2GOm3zzpcQ==
+    engines:
+      node: '>=4'
+
+  '@fontsource/noto-sans-arabic@5.2.8':
+    resolution:
+      integrity: sha512-8GS2d5NKUq8mEeUEIB2wnBQa39myvcndaQF9GlGtKJN9gBGRzVAZ7mKQHHEy6ngPpR6EA3McjYWsQju73sRSZw==
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -803,6 +892,14 @@ packages:
     engines: {node: '>=0.4'}
 
 snapshots:
+
+  '@axe-core/playwright@4.14.0(playwright-core@1.64.1)':
+    dependencies:
+      axe-core: 4.14.0
+      playwright-core: 1.64.1
+  axe-core@4.14.0: {}
+
+  '@fontsource/noto-sans-arabic@5.2.8': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:
