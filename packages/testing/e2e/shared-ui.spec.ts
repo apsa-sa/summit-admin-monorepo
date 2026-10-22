@@ -162,13 +162,15 @@ class SharedUiBrowserSuite {
         page.getByRole("cell", { name: "سجل تجريبي 5", exact: true }),
       ).toBeVisible();
       await page.locator("#gallery-table-state").selectOption("error");
-      await expect(page.getByRole("alert")).toContainText(
-        "تعذّر تحميل البيانات",
-      );
+      await expect(
+        page.locator(".summit-showcase").getByRole("alert"),
+      ).toContainText("تعذّر تحميل البيانات");
       await page
         .getByRole("button", { name: "إعادة المحاولة", exact: true })
         .click();
-      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(
+        page.locator(".summit-showcase").getByRole("alert"),
+      ).toHaveCount(0);
       await page.locator("#gallery-table-state").selectOption("empty");
       await expect(
         page.getByRole("cell", { name: "لا توجد نتائج", exact: true }),

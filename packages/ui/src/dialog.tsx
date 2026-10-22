@@ -3,6 +3,7 @@
 import { Component, createRef } from "react";
 import type { ReactNode } from "react";
 import { Button } from "./controls.js";
+import { FocusCycle } from "./focus-cycle.js";
 export interface DialogProps {
   readonly id: string;
   readonly open: boolean;
@@ -18,6 +19,7 @@ export interface DialogProps {
 /** Native modal provides focus containment and inert background without a portal. */
 export class Dialog extends Component<DialogProps> {
   private readonly element = createRef<HTMLDialogElement>();
+  private readonly focus = new FocusCycle();
   private previousFocus: HTMLElement | null = null;
   override componentDidMount(): void {
     this.sync();
@@ -66,6 +68,9 @@ export class Dialog extends Component<DialogProps> {
         className={`summit-theme summit-dialog summit-dialog--${placement}`}
         aria-labelledby={`${id}-title`}
         aria-describedby={description ? `${id}-description` : undefined}
+        onKeyDown={(event) => {
+          if (this.element.current) this.focus.tab(event, this.element.current);
+        }}
         onClose={() => {
           if (this.props.open) this.props.onClose();
         }}
