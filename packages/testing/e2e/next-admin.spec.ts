@@ -400,7 +400,7 @@ class NextAdminBrowserSuite {
           expect(acknowledgement.status()).toBe(200);
           expect(await acknowledgement.json()).toEqual({ ok: true });
           await acknowledgement.finished();
-          expect(acknowledgement.headers()["set-cookie"]).toMatch(
+          expect(await acknowledgement.headerValue("set-cookie")).toMatch(
             /summit_session=;.*Max-Age=0/,
           );
           await expect(page.locator("#admin-email")).toBeVisible();
