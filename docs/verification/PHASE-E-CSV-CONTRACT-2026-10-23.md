@@ -40,6 +40,8 @@ no-store, nosniff, request-id and sanitized error-code contracts are retained.
   every journey assertion, add actual authenticated invalid-filter export
   requests in all four locale/theme cases for both server consumers. Require
   422 application/json, no attachment and matching request-id error body.
+- `docs/development/exports.md`: actual CSV consumer/API/error documentation,
+  with explicit current format/limit/authorization and remaining formats.
 - This report records evidence, limits, inventory and rollback.
 
 No file/dependency/export/route/schema was deleted. No full-file reformat of the
@@ -76,3 +78,7 @@ main protection and the owner release process stay intact.
 
 العربية: صُحح عقد أخطاء CSV كي تبقى الأخطاء JSON واضحة، وتُضاف ترويسات تنزيل
 الملف بعد نجاح التصدير فقط. لا يشمل هذا التقرير ادعاء اكتمال Excel أو PDF أو الإطلاق.
+
+The branch incorporates the ordinary merge of PR #11's cookie-header inspection
+correction; all existing logout acknowledgement, cookie clearing and old-session
+replay assertions remain. Exact-head CI must pass on the combined source.

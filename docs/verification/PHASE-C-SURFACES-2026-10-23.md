@@ -126,3 +126,16 @@ skip or weakened assertion. A new deferred-controller unit proves immediate
 privacy clearing while busy remains true until the server acknowledgement.
 The corrected head must run every gate again; this trace diagnosis is not a
 substitute for a passing corrected CI run.
+
+### Cookie-header inspection correction
+
+Run [39866468662](https://github.com/apsa-sa/summit-admin-monorepo/actions/runs/39866468662)
+on `6a9b4dccaf2afb180df7884fec4c06eda76436b5` passed 92 unit/contracts, four asset
+contracts, 30 real-PG results and all security gates; 29 browser cases passed,
+four failed at the newly added Set-Cookie check. Playwright's installed 1.64.1
+Response type documentation explicitly says `headers()` omits cookie-related
+security headers. The check used that filtered API incorrectly. It now awaits
+`headerValue("set-cookie")`, the full single-header API. The clearing-header
+assertion, explicit acknowledgement, old-cookie replay and existing 401 check
+are all retained. A fresh exact-head CI remains required; no product/session
+semantics or successful test assertions are changed to bypass this finding.
