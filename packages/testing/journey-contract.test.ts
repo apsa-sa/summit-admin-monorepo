@@ -49,6 +49,14 @@ class JourneyContractTests {
       const transport:typeof fetch=async()=>Response.json({user:{name:'incomplete'}});
       await assert.rejects(new AdminApiClient('http://localhost',transport).me(),{code:'invalid_response'});
     });
+    test('Browser transport preserves the global receiver required by native Web APIs',async()=>{
+      const user=new LoginStore().user;
+      const transport:typeof fetch=async function(this:unknown){
+        if(this!==globalThis)throw new TypeError('Illegal invocation');
+        return Response.json({user});
+      };
+      assert.equal((await new AdminApiClient('http://localhost',transport).me()).id,user.id);
+    });
     test('Ending a browser session aborts outstanding requests before account switching',async()=>{
       let signal:AbortSignal|null|undefined;
       const transport:typeof fetch=async(_url,init)=>new Promise((_resolve,reject)=>{

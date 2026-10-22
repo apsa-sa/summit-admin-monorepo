@@ -10,7 +10,9 @@ export class AdminApiClient {
   constructor(private readonly base='',private readonly transport:typeof fetch=fetch){}
   private async request<T>(path:string,decode:(value:unknown)=>T,init:RequestInit={}):Promise<T>{
     let response:Response;
-    try{response=await this.transport(`${this.base}${path}`,{...init,signal:this.scope.signal,credentials:'same-origin',headers:{...(init.body?{'Content-Type':'application/json'}:{}),...init.headers}});}
+    // Native browser fetch requires its global receiver; storing it as a class
+    // field must not turn the API client into the receiver (Illegal invocation).
+    try{response=await this.transport.call(globalThis,`${this.base}${path}`,{...init,signal:this.scope.signal,credentials:'same-origin',headers:{...(init.body?{'Content-Type':'application/json'}:{}),...init.headers}});}
     catch{throw new ApiFailure(0,'network_error');}
     if(!response.ok){
       const payload:unknown=await response.json().catch(()=>null);

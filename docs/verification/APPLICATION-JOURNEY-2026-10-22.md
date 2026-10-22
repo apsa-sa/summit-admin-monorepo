@@ -26,7 +26,7 @@ preventing lock upgrades and opposite-direction mutation deadlocks.
 
 ## Verification and evidence
 
-- Local pinned Node 22.23.1 / pnpm 9.0.0: TypeScript, 51 unit/contract tests and
+- Local pinned Node 22.23.1 / pnpm 9.0.0: TypeScript, 52 unit/contract tests and
   reference browser compilation passed with zero skipped tests.
 - Next.js production proof build, dependency/publication audits and source/history
   secret scans are pre-publication gates; final results are recorded in the PR.
