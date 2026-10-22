@@ -27,8 +27,10 @@ from record restrictions; server remains authoritative.
 
 ADDED: apps/web-admin/presentation/screens/account.tsx (real account DTO/policy UI),
 apps/web-admin/presentation/screens/permissions.tsx (coarse policy summary),
-docs/development/account-preferences.md (bilingual usage/limits), this report.
-MODIFIED: screens/settings.tsx (compose panels), presentation/controller.ts
+docs/development/account-preferences.md (bilingual usage/limits),
+docs/development/reference-admin.md (exact origin/env/package-build/run instructions), this report.
+MODIFIED: README.md (current implementation/run links; historical charter retained),
+screens/settings.tsx (compose panels), presentation/controller.ts
 (expose capabilities/retain confirmed self DTO), packages/core-rbac/index.ts
 (single-source catalogue, identical grants/restrictions), localization workspace.ts
 (AR/EN labels), workspace.css (logical responsive definition list),
