@@ -1,0 +1,79 @@
+# © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.
+# SUMMIT / قمة — verification only; no database migrations or deployment.
+name: SUMMIT CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'work/**'
+      - 'integration/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: summit-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  foundation:
+    name: Typecheck, unit tests, build and security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select pinned Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22.23.1'
+          package-manager-cache: false
+
+      - name: Enable the declared pnpm version
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          node --version
+          pnpm --version
+
+      - name: Install from committed lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck, unit tests and browser build
+        run: pnpm check
+
+      - name: Audit publication policy
+        run: pnpm audit:publication
+
+      - name: Audit known dependency vulnerabilities
+        run: pnpm audit --audit-level low
+
+      - name: Scan Git history for secrets (Gitleaks 8.30.1)
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: /repo
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo:ro" -w /repo \
+            -e GIT_CONFIG_COUNT -e GIT_CONFIG_KEY_0 -e GIT_CONFIG_VALUE_0 \
+            ghcr.io/gitleaks/gitleaks@sha256:b109bc5f8f76a38196a3e413704fc5b9e3c32360bce4e4b603bd6f45b3721dbb \
+            git --no-banner --redact --log-opts="--all" .
+
+      - name: Scan current project files for secrets
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo:ro" -w /repo \
+            ghcr.io/gitleaks/gitleaks@sha256:b109bc5f8f76a38196a3e413704fc5b9e3c32360bce4e4b603bd6f45b3721dbb \
+            dir --no-banner --redact .
