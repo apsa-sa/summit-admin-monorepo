@@ -12,11 +12,17 @@ class Gate {
 class AdminJourneySuite {
   private readonly fixture=new JourneyFixture();
   private async login(page:Page,account:JourneyAccount,locale:'ar'|'en'='ar',theme:'light'|'dark'='dark'):Promise<void>{
+    const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(JourneyFixture.origin);
+    await expect(page.locator('#login-submit')).toBeEnabled();
     if(locale==='en')await page.locator('#auth-language').click();
     if(theme==='light')await page.locator('#auth-theme').click();
     await page.locator('#email').fill(account.email);await page.locator('#password').fill(account.password);
-    await page.locator('#login-submit').click();await expect(page.locator('#workspace')).toBeVisible();
+    const loginResponse=page.waitForResponse(response=>response.url()===`${JourneyFixture.origin}/api/login`&&response.request().method()==='POST');
+    await page.locator('#login-submit').click();const response=await loginResponse;
+    expect(response.status(),'Login HTTP status').toBe(200);
+    expect(errors,'Browser module errors').toEqual([]);
+    await expect(page.locator('#workspace'),await page.locator('#login-error').innerText()).toBeVisible();
     await expect(page.locator('#password')).toHaveValue('');
   }
   register():void{
