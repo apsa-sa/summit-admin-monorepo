@@ -81,6 +81,7 @@ class AdminJourneySuite {
     });
     test('Delayed account A draft response cannot populate account B workspace',async({page})=>{
       await this.login(page,this.fixture.account('admin'));const captured=new Gate();const release=new Gate();const finished=new Gate();let once=true;
+      await page.locator('#search').fill('Private account A search');
       await page.route('**/api/draft',async route=>{
         if(route.request().method()==='GET'&&once){once=false;const response=await route.fetch();captured.open();await release.promise;
           try{await route.fulfill({response});}finally{finished.open();}
@@ -91,6 +92,7 @@ class AdminJourneySuite {
       const viewer=this.fixture.account('viewer');await page.locator('#email').fill(viewer.email);await page.locator('#password').fill(viewer.password);
       await page.locator('#login-submit').click();await expect(page.locator('#draft-name')).toBeEnabled();
       release.open();await finished.promise;await expect(page.locator('#draft-name')).toHaveValue('');
+      await expect(page.locator('#search')).toHaveValue('');
       const result=await page.request.get(`${JourneyFixture.origin}/api/draft`);const value:unknown=await result.json();
       expect(new ResponseContracts().draft(value).name).toBe('');
     });

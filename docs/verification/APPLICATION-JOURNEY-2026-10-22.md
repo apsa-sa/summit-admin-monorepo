@@ -40,6 +40,24 @@ preventing lock upgrades and opposite-direction mutation deadlocks.
 All remotely executed results must identify the tested commit and workflow run
 in the PR; an unexecuted test is not evidence. No production database is used.
 
+### Executed CI checkpoint
+
+Commit `3695e11c205d5f42125a2e1c58c30e2cb84964f2`, workflow
+[39743012838](https://github.com/apsa-sa/summit-admin-monorepo/actions/runs/39743012838):
+both jobs PASS. Logs confirm 52 unit/contract tests, 16 PostgreSQL scenarios plus
+their parent test (17 reported), and 12 Chromium tests, with zero failures/skips.
+Dependency/publication audits, current-source/history Gitleaks and production
+Next.js proof build also PASS. Initial run 39742162801 failed all eight reference
+browser scenarios: invoking native fetch with the API class as receiver prevented
+login requests. Restoring the global receiver resolved the real browser failure;
+a receiver-sensitive regression test now covers it. No test was skipped/relaxed.
+
+The final follow-up also disables login until initial session detection settles,
+uses POST as the form fallback to keep credentials out of URLs, and clears search,
+filters and actor labels on logout. The account-switch browser scenario asserts
+search cleanup. The PR must record a new green run on that exact final head;
+this earlier successful checkpoint does not certify later changes.
+
 ## Limits and remaining release gates
 
 The reference admin remains the existing DOM application; the Next.js proof has

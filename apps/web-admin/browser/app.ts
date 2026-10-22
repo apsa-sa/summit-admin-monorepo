@@ -42,7 +42,7 @@ class AdminApplication {
     try{this.currentUser=await this.api.me();this.enter();}catch(error:unknown){
       if(error instanceof ApiFailure && error.status!==401)this.notify(error);
       this.loginScreen();
-    }
+    }finally{this.dom.byId<HTMLButtonElement>('login-submit').disabled=false;}
   }
 
   private bind():void{
@@ -82,6 +82,9 @@ class AdminApplication {
     this.page=null;this.selected=null;this.filterPage=1;
     this.dom.byId<HTMLDialogElement>('user-dialog').close();
     this.dom.byId('users-body').replaceChildren();this.dom.byId('audit-body').replaceChildren();
+    this.dom.byId<HTMLInputElement>('search').value='';
+    this.dom.byId<HTMLSelectElement>('filter-role').value='';this.dom.byId<HTMLSelectElement>('filter-status').value='';
+    this.dom.text('record-total','—');this.dom.text('actor-name','');this.dom.text('actor-role','');
     this.dom.byId<HTMLInputElement>('draft-name').value='';this.dom.byId<HTMLInputElement>('draft-organization').value='';
     this.currentUser=null;
     this.dom.show('login-screen',true);this.dom.show('workspace',false);
