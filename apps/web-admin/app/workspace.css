@@ -199,4 +199,31 @@ body {
   }
 }
 
-.admin-topbar h1 { font-size: 1.25rem; margin: 0; }
+.admin-topbar h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+/* Reflow at 200%: allow intrinsic flex/grid widths to shrink and compound actions to wrap. */
+.admin-actions {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.admin-actions > .summit-button {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.admin-main,
+.admin-login-brand,
+.admin-login-form {
+  overflow-wrap: anywhere;
+}
+.admin-card .summit-field,
+.admin-login-form .summit-field {
+  min-inline-size: 0;
+}
+.admin-main .summit-input,
+.admin-login-form .summit-input {
+  min-inline-size: 0;
+}

@@ -320,6 +320,10 @@ class NextAdminBrowserSuite {
       await page.evaluate(() => {
         document.documentElement.style.fontSize = "200%";
       });
+      await page.screenshot({
+        path: "test-results/admin-mobile-200.png",
+        fullPage: true,
+      });
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

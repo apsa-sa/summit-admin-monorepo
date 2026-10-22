@@ -112,6 +112,23 @@ compiler suppression, debug trace or any escape hatch is introduced.
 | ADDED | `tooling/scripts/run-next.mjs` | Build/runtime/consumer integration, exact lockfile, CI or generated-output protection |
 | MODIFIED | `tsconfig.json` | Build/runtime/consumer integration, exact lockfile, CI or generated-output protection |
 
+## First combined CI and reflow correction
+
+Commit 424d714, push run 39819476166: clean installation, 67 units/contracts,
+23 real PostgreSQL results, bounded proof and final admin production builds,
+publication/advisory/Gitleaks gates passed. Browser result: 25/26. All four real
+Next login/draft/Drawer CRUD/audit/CSV/revocation modes, viewer/editor/CSRF,
+SSR/no-JS/shared-admission and retained cases passed. The remaining mobile 200%
+assertion caught horizontal overflow; it is not skipped or weakened.
+
+Retrieved the actual trace screenshot: the compound Commands + keyboard-hint
+button exceeded the narrow topbar due to intrinsic flex minimum sizes. Corrected
+min-inline-size constraints and enabled wrapping of compound button children,
+including grid field minima and long-content wrapping. No overflow hiding,
+viewport enlargement, font-size reduction or assertion relaxation. Added a named
+mobile-200 screenshot before the same overflow assertion for inspectable evidence.
+All gates must pass again on the corrected head before accepting this increment.
+
 ## Remaining work, risk and rollback
 
 P1: direct combined-head fresh install, PostgreSQL, browser, security/advisory/
