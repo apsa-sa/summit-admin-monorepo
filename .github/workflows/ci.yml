@@ -77,3 +77,58 @@ jobs:
             -v "$PWD:/repo:ro" -w /repo \
             ghcr.io/gitleaks/gitleaks@sha256:b109bc5f8f76a38196a3e413704fc5b9e3c32360bce4e4b603bd6f45b3721dbb \
             dir --no-banner --redact .
+
+  architecture-integration:
+    name: Next.js proof, PostgreSQL and browser contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: summit_ci_${{ github.run_id }}_${{ github.run_attempt }}
+          POSTGRES_DB: summit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d summit_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      SUMMIT_TEST_DB_APPROVED: '1'
+      NEXT_TELEMETRY_DISABLED: '1'
+      PROOF_ORIGIN: http://127.0.0.1:3211
+      SUMMIT_CI_DB_PASSWORD: summit_ci_${{ github.run_id }}_${{ github.run_attempt }}
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Select pinned Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.23.1'
+          package-manager-cache: false
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+      - name: Configure isolated disposable test database
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          const url = 'postgresql:' + '//postgres:' + process.env.SUMMIT_CI_DB_PASSWORD + '@127.0.0.1:5432/summit_test';
+          appendFileSync(process.env.GITHUB_ENV, `TEST_DATABASE_URL=${url}\nDATABASE_URL=${url}\n`);
+          JS
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests and existing browser build
+        run: pnpm check
+      - name: Real PostgreSQL integration and installation isolation
+        run: pnpm test:integration
+      - name: Production build of bounded Next.js proof
+        run: pnpm proof:build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: SSR, hydration, direction, session and origin contracts
+        run: pnpm test:e2e

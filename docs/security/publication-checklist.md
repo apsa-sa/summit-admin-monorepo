@@ -39,3 +39,14 @@ remediation; never paste its value into chats or issue trackers.
 This gate approves at most a **development checkpoint**, not a production
 application. Next.js, PostgreSQL integration, browser E2E, access-control
 integration, accessibility and security gates remain open.
+
+## Authorized continuation — 2026-10-22
+
+The owner approved staged development on a new isolated branch in this
+conversation. For the architecture/integration stage the authorized ref is
+`work/architecture-integration-20261022`, based on main `1d4f5e1` whose tree
+matches the already-merged integration branch. This supersedes only the old
+branch restriction above for this stage. Verification-only Actions and a draft
+PR are within that scope. Main writes, merge, force-push, settings changes,
+production migration/deployment and release publication remain unauthorized.
+See the stage report under `docs/verification/`.

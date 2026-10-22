@@ -13,14 +13,41 @@ export class PostgresRepository {
   private user(row: UserRow): User { return {id:row.id,name:row.name,email:row.email,role:Validation.role(row.role),status:Validation.status(row.status),version:Validation.integer(row.version),createdAt:row.created_at.toISOString()}; }
   async actorForSession(digest:string):Promise<Actor|null> { const result=await this.pool.query<UserRow>("SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.digest=$1 AND s.expires_at>now() AND u.status='active'",[digest]);const row=result.rows[0]; return row?{id:row.id,role:Validation.role(row.role)}:null; }
   async credentials(email:string):Promise<{user:User;hash:string}|null> {const result=await this.pool.query<UserRow>("SELECT * FROM users WHERE email=$1 AND status='active'",[email]); const row=result.rows[0];return row?.password_hash?{user:this.user(row),hash:row.password_hash}:null;}
-  async session(digest:string,id:string):Promise<void> {await this.pool.query("INSERT INTO sessions(digest,user_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[digest,id]);}
+  async session(digest:string,id:string,expectedVersion?:number):Promise<void> {
+    const client=await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Same lock order as role changes: user before session. A stale login cannot
+      // issue a new session after credentials were checked against an old version.
+      const result=await client.query<UserRow>("SELECT * FROM users WHERE id=$1 AND status='active' FOR SHARE",[id]);
+      const row=result.rows[0];
+      if(!row || (expectedVersion!==undefined && Validation.integer(row.version)!==expectedVersion))throw new DomainError(401,'unauthenticated');
+      await client.query("INSERT INTO sessions(digest,user_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[digest,id]);
+      await client.query('COMMIT');
+    } catch(error:unknown) {await client.query('ROLLBACK');throw error;} finally {client.release();}
+  }
   async logout(digest:string):Promise<void> {await this.pool.query('DELETE FROM sessions WHERE digest=$1',[digest]);}
   async self(id:string):Promise<User> { const result=await this.pool.query<UserRow>('SELECT * FROM users WHERE id=$1',[id]);const row=result.rows[0];if(!row) throw new DomainError(404,'not_found');return this.user(row); }
   async list(query:UserQuery,exporting=false):Promise<UserPage> { const values=[`%${query.search.replaceAll('\\','\\\\').replaceAll('%','\\%').replaceAll('_','\\_')}%`,query.role,query.status]; const where="(name ILIKE $1 OR email ILIKE $1) AND ($2='' OR role=$2) AND ($3='' OR status=$3)"; const count=await this.pool.query<{total:string}>(`SELECT count(*) AS total FROM users WHERE ${where}`,values);const total=Validation.integer(Number(count.rows[0]?.total),0);if(exporting&&total>10000) throw new DomainError(422,'export_limit'); const size=exporting?10000:8; const result=await this.pool.query<UserRow>(`SELECT * FROM users WHERE ${where} ORDER BY ${query.sort==='name'?'name ASC':'created_at DESC'},id LIMIT $4 OFFSET $5`,[...values,size,exporting?0:(query.page-1)*size]);return {rows:result.rows.map(row=>this.user(row)),total,page:query.page,pageSize:size}; }
   async mutate(actor:Actor,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy):Promise<User|null> {
+    return this.executeMutation(actor,id,input,requestId,policy);
+  }
+  /** HTTP callers must bind authorization to the actual session, not a stale Actor. */
+  async mutateForSession(digest:string,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy):Promise<User|null> {
+    const actor=await this.actorForSession(digest);
+    if(!actor)throw new DomainError(401,'unauthenticated');
+    return this.executeMutation(actor,id,input,requestId,policy,digest);
+  }
+  private async executeMutation(actor:Actor,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy,digest?:string):Promise<User|null> {
     const client=await this.pool.connect();try{await client.query('BEGIN');let existing:User|undefined;
     // Recheck the live actor under the transaction so role changes cannot race writes.
     const acting=await client.query<UserRow>("SELECT * FROM users WHERE id=$1 AND status='active' FOR SHARE",[actor.id]);const live=acting.rows[0];if(!live) throw new DomainError(401,'unauthenticated');const currentActor={id:live.id,role:Validation.role(live.role)};
+    if(digest!==undefined){
+      // Hold through commit: logout waits for an already-authorized write;
+      // a revocation that completed first makes this operation fail closed.
+      const session=await client.query("SELECT digest FROM sessions WHERE digest=$1 AND user_id=$2 AND expires_at>now() FOR SHARE",[digest,currentActor.id]);
+      if(!session.rows[0])throw new DomainError(401,'unauthenticated');
+    }
     if(id){const locked=await client.query<UserRow>('SELECT * FROM users WHERE id=$1 FOR UPDATE',[id]);if(!locked.rows[0])throw new DomainError(404,'not_found');existing=this.user(locked.rows[0]);}
     const action=id?(input?'users:update':'users:delete'):'users:create';policy.require(currentActor,action,existing,input??undefined);
     const target=id??randomUUID();let output:User|null=null;

@@ -2,6 +2,9 @@
 # SUMMIT Admin Monorepo / قمة — أساس مفتوح المصدر للوحات الإدارة
 
 **Status: DEVELOPMENT FOUNDATION — NOT PRODUCTION READY**
+
+Architecture/integration continuation: [stage report](docs/verification/ARCHITECTURE-INTEGRATION-2026-10-22.md) · [run guide](docs/verification/RUN-ARCHITECTURE-GATE.md).
+The original checkpoints below are historical records; they do not describe the latest GitHub/CI state.
 **الحالة: أساس تطويري غير معتمد للنشر الإنتاجي.**
 
 ## Original repository charter / التعريف الأصلي
@@ -67,10 +70,10 @@ Original authored code: [MIT](LICENSE); third-party licenses remain separate
 - **Added browser proof:** class-based DOM controllers and API client in
   `apps/web-admin/browser/`, with RTL/LTR, themes, protected operations,
   server drafts and localized interface. **Not** a Next.js App Router app.
-- **BLOCKED:** Next.js App Router compatibility with the owner's strict
-  class-only entry point requirement; see
-  [`ADR-0001`](docs/adr/0001-nextjs-class-boundary.md). No framework adapter
-  exception was introduced.
+- **PROOF IN PROGRESS:** An isolated Next.js app with explicitly bounded
+  framework entries is now in `apps/next-proof`. Owner acceptance remains open; see
+  [`ADR-0001`](docs/adr/0001-nextjs-class-boundary.md). The approved scope and each boundary are recorded there. This does not
+  replace the original app or establish production readiness.
 
 ## Local verification / التحقق المحلي
 

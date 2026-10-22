@@ -20,5 +20,9 @@
     "apps/**/*.ts",
     "packages/**/*.ts",
     "tooling/**/*.ts"
+  ],
+  "exclude": [
+    "apps/next-proof/**",
+    "node_modules"
   ]
 }

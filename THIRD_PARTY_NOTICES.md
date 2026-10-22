@@ -20,3 +20,16 @@ development, optional and transitive packages, retain applicable license texts,
 report unknown licenses and generate an SBOM before distribution. A dependency's
 license is never replaced by this project's MIT declaration. No external fonts,
 logos or icon assets are bundled in the authored UI.
+
+## Architecture proof additions (2026-10-22)
+
+| Package | Exact version | Declared license | Usage |
+|---|---|---|---|
+| next | 16.4.2 | MIT | Isolated App Router compatibility proof |
+| react / react-dom | 19.3.1 | MIT | Proof rendering and hydration |
+| @types/react / @types/react-dom | 19.3.0 | MIT | Proof type declarations |
+| @playwright/test | 1.64.1 | Apache-2.0 | Browser and HTTP contracts |
+
+This list supplements the baseline. It does not replace recursive license
+review, copied notice texts, dependency advisory checks or the release SBOM.
+No UI framework source, fonts or third-party image assets were copied.
