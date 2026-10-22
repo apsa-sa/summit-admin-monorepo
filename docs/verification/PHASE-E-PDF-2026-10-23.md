@@ -17,7 +17,8 @@ upgrade or new lock package/snapshot. Next externalizes the server runtime only.
 Added tests: PDF HTML escape/locale/font/bounds/provider lifecycle, HTTP metadata/
 renderer failure and denied viewer, real-PG contention/installation isolation/
 commit+rollback release. Four existing Next journeys now download actual PDFs;
-viewer direct PDF is denied. CI retains actual synthetic PDF artifacts for
+viewer direct PDF is denied. Two additional actual 101-row/multipage AR/EN
+prints use Chromium and a real isolated database lease. CI retains synthetic PDF artifacts for
 independent text/visual QA. Existing assertions and original apps/proof remain.
 
 Local 117 unit/contracts + 4 asset contracts PASS before final exact-head run;

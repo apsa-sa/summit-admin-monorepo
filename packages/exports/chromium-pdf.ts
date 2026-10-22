@@ -18,7 +18,7 @@ export class ChromiumPdfPrinter implements PdfPrintPort {
         if (!document.fonts.check('10px "Noto Sans Arabic"', "قمة Summit"))
           throw new Error("Required print font unavailable");
       });
-      const bytes = await page.pdf({ format: "A4", landscape: true, printBackground: true, tagged: true });
+      const bytes = await page.pdf({ format: "A4", landscape: true, printBackground: true, tagged: true, displayHeaderFooter: true, headerTemplate: "<span></span>", footerTemplate: '<div style="font-size:8px;text-align:center;width:100%">SUMMIT · <span class="pageNumber"></span> / <span class="totalPages"></span></div>' });
       if (bytes.byteLength > 16_000_000 || bytes.subarray(0, 5).toString() !== "%PDF-")
         throw new Error("Invalid PDF output");
       return Uint8Array.from(bytes).buffer;
