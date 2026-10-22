@@ -10,6 +10,7 @@ import {SessionService, type SessionStore} from '../auth/index.js';
 import {CsvExporter} from '../exports/index.js';
 import {DatabaseConnectionPolicy} from '../data-access/connection-policy.js';
 import {PublicationPolicy} from '../security/publication-policy.js';
+import {Localizer} from '../../apps/web-admin/browser/localization.js';
 
 class FakeSessionStore implements SessionStore {
   constructor(private readonly actor:Actor|null) {}
@@ -167,6 +168,10 @@ class FoundationTestSuite {
       const local='DATABASE_URL=postgresql://'+'summit:summit_local_only@127.0.0.1:55439/summit';
       assert.deepEqual(policy.findings(local,'.env.example'),[]);
       assert.deepEqual(policy.findings(local,'prod.env'),['secret_database_url']);
+    });
+    test('SUMMIT is officially localized as قمة in Arabic',()=>{
+      assert.equal(Localizer.ar.product,'قمة');
+      assert.equal(Localizer.en.product,'SUMMIT');
     });
     test('CSV exporter supports Arabic headers',()=>{
       assert.ok(new CsvExporter().render([this.stored],'ar').includes('الاسم'));

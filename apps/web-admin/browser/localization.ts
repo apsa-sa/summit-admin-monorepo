@@ -5,7 +5,7 @@ export type TranslationKey = keyof typeof Localizer.ar;
 
 export class Localizer {
   static readonly ar = {
-    product:'SUMMIT', subtitle:'مساحة إدارة متكاملة', workspace:'مساحة العمل', dashboard:'نظرة عامة',
+    product:'قمة', subtitle:'مساحة إدارة متكاملة', workspace:'مساحة العمل', dashboard:'نظرة عامة',
     users:'المستخدمون', drafts:'المسودات', audit:'سجل التدقيق', signIn:'تسجيل الدخول',
     email:'البريد الإلكتروني', password:'كلمة المرور', signOut:'تسجيل الخروج',
     signInNote:'استخدم حساب المشرف الذي أنشأته في قاعدة البيانات المحلية.',
@@ -63,6 +63,7 @@ export class Localizer {
   set(value: Locale): void {this.locale=value; document.documentElement.lang=value; document.documentElement.dir=value==='ar'?'rtl':'ltr';}
   t(key: TranslationKey): string {return this.locale==='ar'?Localizer.ar[key]:Localizer.en[key];}
   apply(root: ParentNode = document): void {
+    document.title = `${this.t('product')} — ${this.t('subtitle')}`;
     root.querySelectorAll<HTMLElement>('[data-i18n]').forEach(element=>{
       const key=element.dataset.i18n as TranslationKey | undefined;
       if(key && key in Localizer.ar)element.textContent=this.t(key);

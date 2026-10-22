@@ -1,5 +1,5 @@
 <!-- © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid. SPDX-License-Identifier: MIT -->
-# SUMMIT Admin Monorepo / منصة SUMMIT الإدارية
+# SUMMIT Admin Monorepo / قمة — أساس مفتوح المصدر للوحات الإدارة
 
 **Status: DEVELOPMENT FOUNDATION — NOT PRODUCTION READY**
 **الحالة: أساس تطويري غير معتمد للنشر الإنتاجي.**
