@@ -121,6 +121,10 @@ export class UsersScreen extends WorkspaceScreen {
                 >
                   {m.t("exportExcel")}
                 </a>
+                <a className="admin-action-link" href={c.exportUrl("pdf")}
+                  aria-disabled={s.exportBusy} onClick={event => { event.preventDefault(); void c.download("pdf"); }}>
+                  {m.t("exportPdf")}
+                </a>
               </>
             )}
           </div>

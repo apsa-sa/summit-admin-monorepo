@@ -47,3 +47,13 @@ This version declares no runtime dependencies. Existing resolutions were not
 upgraded. This is an addition to the historical baseline above, not the final SBOM.
 The existing design-token build distributes Noto Sans Arabic 5.2.8 font subsets
 with their OFL notice; that earlier addition does not change this MIT notice.
+
+## PDF rendering runtime
+
+Playwright 1.64.1 (Microsoft, Apache-2.0) is already the pinned browser-test
+engine; this increment also declares its actual server runtime consumers without
+changing the existing package/snapshot resolution. Exact upstream LICENSE and
+NOTICE copies are in docs/licenses/playwright-1.64.1-*.txt. Its ThirdPartyNotices
+remain distributed with the dependency. Chromium is installed by the operator
+using the pinned Playwright installer; its own bundled notices apply. PDF embeds
+Noto Sans Arabic 5.2.8 under SIL OFL-1.1, including its existing packaged notice.

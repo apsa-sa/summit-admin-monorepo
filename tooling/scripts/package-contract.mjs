@@ -41,8 +41,12 @@ class PackageContractCommand {
         if (name !== "localization")
           for (const required of ["dist/index.css", "dist/css.d.ts"])
             assert.ok(files.includes(`package/${required}`));
-        if (name === "design-tokens")
+        if (name === "design-tokens") {
           assert.ok(files.includes("package/dist/fonts/OFL-LICENSE.txt"));
+          assert.ok(files.includes("package/dist/print-fonts.js"));
+          assert.ok(files.includes("package/dist/print-fonts.d.ts"));
+          assert.equal(manifest.exports["./print-fonts"].import, "./dist/print-fonts.js");
+        }
         for (const file of files)
           assert.ok(
             /^package\/(?:dist\/|README\.md$|LICENSE$|package\.json$)/.test(

@@ -84,6 +84,10 @@ const en = Object.freeze({
     "The selected user and their sessions/draft will be removed. The audit event is retained.",
   exportCsv: "Export authorized CSV",
   exportExcel: "Export authorized Excel",
+  exportPdf: "Export authorized PDF",
+  pdfLimit: "PDF is limited to 1,000 filtered records. Narrow the filters or use CSV/Excel.",
+  pdfBusy: "Another PDF is rendering. Retry explicitly shortly.",
+  pdfUnavailable: "PDF rendering is unavailable. Contact the installation administrator or use CSV/Excel.",
   exporting: "Preparing the requested download…",
   downloadStarted: "Download started",
   exportLimit: "More than 10,000 records match. Narrow the filters and export again.",
@@ -201,6 +205,10 @@ const ar: Readonly<Record<WorkspaceMessageKey, string>> = Object.freeze({
     "سيُحذف المستخدم المحدد وجلساته ومسودته، مع الاحتفاظ بحدث التدقيق.",
   exportCsv: "تصدير CSV المصرّح به",
   exportExcel: "تصدير Excel المصرّح به",
+  exportPdf: "تصدير PDF المصرّح به",
+  pdfLimit: "حد PDF ألف سجل مصفّى. ضيّق الفلاتر أو استخدم CSV/Excel.",
+  pdfBusy: "يجري إنشاء ملف PDF آخر؛ أعد المحاولة صراحةً بعد قليل.",
+  pdfUnavailable: "إنشاء PDF غير متاح. تواصل مع مسؤول التثبيت أو استخدم CSV/Excel.",
   exporting: "جارٍ تجهيز الملف المطلوب…",
   downloadStarted: "بدأ تنزيل الملف",
   exportLimit: "تتجاوز النتائج 10 آلاف سجل. ضيّق التصفية ثم أعد التصدير.",
@@ -253,6 +261,9 @@ export class WorkspaceMessages {
     if (code === "email_exists") return this.t("emailExists");
     if (code === "version_conflict") return this.t("conflict");
     if (code === "export_limit") return this.t("exportLimit");
+    if (code === "pdf_export_limit") return this.t("pdfLimit");
+    if (code === "pdf_export_busy") return this.t("pdfBusy");
+    if (code === "pdf_renderer_unavailable" || code === "pdf_render_failed") return this.t("pdfUnavailable");
     if (code === "network_error") return this.t("network");
     if (status === 401) return this.t("expired");
     if (status === 403) return this.t("forbidden");

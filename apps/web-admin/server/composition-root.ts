@@ -1,4 +1,9 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import { PdfExporter } from '../../../packages/exports/pdf.js';
+import { PdfDocument } from '../../../packages/exports/pdf-document.js';
+import { ChromiumPdfPrinter } from '../../../packages/exports/chromium-pdf.js';
+import { PostgresExportLease } from '../../../packages/data-access/export-lease.js';
+import { printFontCss } from '@summit/design-tokens/print-fonts';
 import { PostgresRepository } from '../../../packages/data-access/index.js';
 import { PostgresRateLimiter } from '../../../packages/data-access/rate-limiter.js';
 import { DatabaseConnectionPolicy } from '../../../packages/data-access/connection-policy.js';
@@ -34,7 +39,7 @@ export class AdminCompositionRoot {
     const tokens=new SessionToken();const logger=new SafeLogger();const body=new JsonBody();
     this.controller=new AdminHttpController(
       new AuthenticationService(this.repository.identities,sessions,new PasswordHasher(),tokens,attempts === 'database' ? new PostgresRateLimiter(this.repository.pool) : new RateLimiter()),
-      new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter(),[new SpreadsheetExporter(new SpreadsheetText())]),
+      new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter(),[new SpreadsheetExporter(new SpreadsheetText()),new PdfExporter(new PdfDocument(printFontCss),new ChromiumPdfPrinter(),new PostgresExportLease(this.repository.pool))]),
       new DraftApplicationService(this.repository.drafts,policy),new AuditApplicationService(this.repository.audit,sessions,policy),
       this.repository,new SessionCookie(tokens,parsed.protocol==='https:'),body,logger,origin,
       new TablePreferenceService(new PostgresTablePreferenceRepository(this.repository.pool,new PostgresSessionGuard(),new TablePreferenceValidation()),policy,new TablePreferenceValidation()));

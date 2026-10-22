@@ -16,6 +16,10 @@
     "./css": {
       "types": "./dist/css.d.ts",
       "default": "./dist/index.css"
+    },
+    "./print-fonts": {
+      "types": "./dist/print-fonts.d.ts",
+      "import": "./dist/print-fonts.js"
     }
   },
   "scripts": {

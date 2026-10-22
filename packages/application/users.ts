@@ -78,7 +78,7 @@ export class UserApplicationService {
         contentType: "text/csv; charset=utf-8",
         filename: "summit-users.csv",
       };
-    if (format !== "xlsx") throw new DomainError(422, "invalid_export_format");
+    if (format !== "xlsx" && format !== "pdf") throw new DomainError(422, "invalid_export_format");
     const locale = params.get("locale") ?? "ar";
     if (locale !== "ar" && locale !== "en")
       throw new DomainError(422, "invalid_export_locale");
@@ -90,8 +90,8 @@ export class UserApplicationService {
     return {
       body: bytes,
       contentType:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      filename: "summit-users.xlsx",
+        format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      filename: format === "pdf" ? "summit-users.pdf" : "summit-users.xlsx",
     };
   }
 }
