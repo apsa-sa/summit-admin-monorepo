@@ -1,9 +1,9 @@
 <!-- © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT -->
 # ADR-0003 — final admin/docs framework boundary
 
-Status: PROPOSED — OWNER APPROVAL REQUIRED BEFORE IMPLEMENTATION.
+Status: OWNER AUTHORIZED FOR ALTERNATIVE 1 — IMPLEMENTATION ACCEPTANCE PENDING.
 Baseline: protected main `65e82cd2e89c328b8ab007a57c8c7030849eb507`.
-This document introduces no executable framework entry or new exception by itself.
+This document records the bounded owner authorization; compatibility and acceptance still require direct implementation evidence.
 
 ## Context and approval trigger
 
@@ -111,18 +111,26 @@ Current proposal is documentation only; abandon this PR to withdraw it. After an
 approved implementation, use reviewed code reverts. Do not delete legacy code or
 operational data, rewrite history or apply destructive down migrations.
 
-Owner decision: PENDING. No response, elapsed time, prior proof acceptance,
-working local candidate, green prerequisite CI or general goal to finish the
-product is interpreted as approval of these six additional entry boundaries.
-An approval must identify alternative 1 (or a revised exact scope) and be recorded
-here before implementation. Merge/release/production approval is not granted by
-this architecture decision.
+Owner decision recorded 2026-10-22 (Asia/Riyadh): the owner replied
+«اعتمد اذا هي صحيحة ومثالية ... واكمل العمل حسب المطلوب والتزم الشروط»
+to the explicit alternative-1/six-path question. This authorizes implementation
+of alternative 1 within R1–R6, subject to the original engineering gates. It is
+not a statement that an untested implementation is ideal, secure or production
+ready. Alternative 2 remains unapproved. No extra UI function/hook, source
+removal, dependency upgrade, merge or release permission is inferred.
 
-## القرار المطلوب من المالك
+Engineering review: this is a coherent separation between framework invocation
+and class-owned application/presentation/infrastructure logic. Direct exported
+class methods must not depend on `this`. Source syntax alone is insufficient:
+build, SSR, hydration, route contracts and the complete journey must verify the
+combined head. Failure is reported and corrected inside this scope; a different
+boundary design needs a fresh decision, without silent fallback.
 
-هل تعتمد البديل الأول لنقاط الدخول الست المحددة أعلاه، بحيث تكون صادرات Next.js
+## نطاق اعتماد المالك
+
+اعتمد المالك تنفيذ البديل الأول لنقاط الدخول الست المحددة أعلاه، بحيث تكون صادرات Next.js
 مراجع إلى أساليب كلاسات صغيرة عند حدود الإطار فقط، مع بقاء مكونات العرض ومنطق
-المشروع والخدمات والوصول للبيانات بالكلاسات وSRP وDI، ودون Hooks أو مكونات عرض دالية؟
+المشروع والخدمات والوصول للبيانات بالكلاسات وSRP وDI، ودون Hooks أو مكونات عرض دالية.
 
-هذا طلب توسعة محدودة ومعلنة لحدود الإطار. لا تُنفَّذ قبل موافقتك، ولا تعني اعتماد
-المنتج للإنتاج أو السماح بالدمج أو الإصدار خارج بواباتهما.
+هذا اعتماد تنفيذ محدود لحدود الإطار، مشروط بإثبات الصحة بالاختبارات؛ ولا يعني
+اعتماد المنتج للإنتاج أو السماح بالدمج أو الإصدار خارج بواباتهما.
