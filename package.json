@@ -8,12 +8,12 @@
     "node": ">=22.23.1 <23"
   },
   "scripts": {
-    "dev": "tsx apps/web-admin/server/main.ts",
+    "dev": "node --import tsx apps/web-admin/server/main.ts",
     "build": "tsc --noEmit && tsc -p apps/web-admin/tsconfig.browser.json",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test packages/testing/*.test.ts",
-    "db:migrate": "tsx tooling/scripts/database.ts migrate",
-    "db:seed": "tsx tooling/scripts/database.ts seed",
+    "db:migrate": "node --import tsx tooling/scripts/database.ts migrate",
+    "db:seed": "node --import tsx tooling/scripts/database.ts seed",
     "check": "pnpm typecheck && pnpm test && pnpm build",
     "audit:publication": "node --import tsx tooling/scripts/publication-audit.ts",
     "proof:build": "pnpm --filter @summit/next-proof build",

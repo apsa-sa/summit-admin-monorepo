@@ -54,6 +54,8 @@ importers:
 
   apps/web-admin: {}
 
+  packages/application: {}
+
   packages/auth: {}
 
   packages/contracts: {}

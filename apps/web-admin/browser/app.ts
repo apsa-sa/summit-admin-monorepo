@@ -1,8 +1,9 @@
 // © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.
 // SPDX-License-Identifier: MIT
-import type {User, UserInput, UserPage, Draft, AuditEvent, Role, Status} from '../../../packages/contracts/index.js';
+import type {User, UserInput, UserPage, Role, Status} from '../../../packages/contracts/index.js';
 import {AdminApiClient, ApiFailure} from './api.js';
 import {Localizer, type TranslationKey} from './localization.js';
+import {DraftAutosaveController,BrowserDraftScheduler} from './draft-controller.js';
 
 class Dom {
   byId<T extends HTMLElement>(id:string):T {
@@ -23,12 +24,18 @@ class AdminApplication {
   private userLoadSequence=0;
   private readonly dom=new Dom();
   private activeTab:'users'|'drafts'|'audit'='users';
-  private draftState:Draft|null=null;
-  private draftTimeout:ReturnType<typeof setTimeout>|null=null;
-  private draftInFlight=false;
-  private draftPending=false;
+  private readonly drafts:DraftAutosaveController;
+  private sessionGeneration=0;
 
-  constructor(private readonly api:AdminApiClient,private readonly lang:Localizer){}
+  constructor(private readonly api:AdminApiClient,private readonly lang:Localizer){
+    this.drafts=new DraftAutosaveController(api,{
+      fields:()=>({name:this.dom.byId<HTMLInputElement>('draft-name').value,organization:this.dom.byId<HTMLInputElement>('draft-organization').value}),
+      fill:draft=>{this.dom.byId<HTMLInputElement>('draft-name').value=draft.name;this.dom.byId<HTMLInputElement>('draft-organization').value=draft.organization;},
+      disabled:value=>{this.dom.byId<HTMLInputElement>('draft-name').disabled=value;this.dom.byId<HTMLInputElement>('draft-organization').disabled=value;},
+      status:value=>this.dom.text('draft-status',this.lang.t(value)),
+      error:error=>this.dom.text('draft-status',this.message(error)),
+    },new BrowserDraftScheduler());
+  }
 
   async mount():Promise<void>{
     this.bind();this.lang.apply();this.setTheme('dark');
@@ -43,10 +50,10 @@ class AdminApplication {
       event.preventDefault();void this.login();
     });
     this.dom.byId('signout-button').addEventListener('click',()=>{void this.logout();});
-    this.dom.byId('language-button').addEventListener('click',()=>{
+    for(const id of ['language-button','auth-language'])this.dom.byId(id).addEventListener('click',()=>{
       this.lang.set(this.lang.current==='ar'?'en':'ar');this.lang.apply();this.render();
     });
-    this.dom.byId('theme-button').addEventListener('click',()=>{
+    for(const id of ['theme-button','auth-theme'])this.dom.byId(id).addEventListener('click',()=>{
       this.setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
     });
     this.dom.byId('nav-users').addEventListener('click',()=>this.navigate('users'));
@@ -62,14 +69,20 @@ class AdminApplication {
     this.dom.byId<HTMLFormElement>('user-form').addEventListener('submit',event=>{event.preventDefault();void this.saveUser();});
     this.dom.byId('delete-user').addEventListener('click',()=>{void this.deleteUser();});
     this.dom.byId('cancel-user').addEventListener('click',()=>this.dom.byId<HTMLDialogElement>('user-dialog').close());
-    this.dom.byId('draft-name').addEventListener('input',()=>this.scheduleDraft());
-    this.dom.byId('draft-organization').addEventListener('input',()=>this.scheduleDraft());
-    this.dom.byId('draft-retry').addEventListener('click',()=>{if(this.draftState)void this.saveDraft();else void this.loadDraft();});
+    this.dom.byId('draft-name').addEventListener('input',()=>this.drafts.changed());
+    this.dom.byId('draft-organization').addEventListener('input',()=>this.drafts.changed());
+    this.dom.byId('draft-retry').addEventListener('click',()=>{void this.drafts.retry();});
+    this.dom.byId('draft-reload').addEventListener('click',()=>{if(window.confirm(this.lang.t('confirmReload')))void this.drafts.reloadConfirmed();});
     window.addEventListener('popstate',()=>{const hash=location.hash.replace('#','');if(hash==='users'||hash==='drafts'||hash==='audit')this.navigate(hash,false);});
   }
 
   private setTheme(value:'dark'|'light'):void{document.documentElement.dataset.theme=value;this.dom.byId('theme-button').setAttribute('aria-label',this.lang.t('theme'));}
   private loginScreen():void{
+    this.sessionGeneration++;this.userLoadSequence++;this.api.endSession();this.drafts.deactivate();
+    this.page=null;this.selected=null;this.filterPage=1;
+    this.dom.byId<HTMLDialogElement>('user-dialog').close();
+    this.dom.byId('users-body').replaceChildren();this.dom.byId('audit-body').replaceChildren();
+    this.dom.byId<HTMLInputElement>('draft-name').value='';this.dom.byId<HTMLInputElement>('draft-organization').value='';
     this.currentUser=null;
     this.dom.show('login-screen',true);this.dom.show('workspace',false);
     this.dom.byId<HTMLInputElement>('password').value='';
@@ -78,6 +91,7 @@ class AdminApplication {
     const submit=this.dom.byId<HTMLButtonElement>('login-submit');submit.disabled=true;
     try{
       this.currentUser=await this.api.login(this.dom.byId<HTMLInputElement>('email').value,this.dom.byId<HTMLInputElement>('password').value);
+      this.dom.byId<HTMLInputElement>('password').value='';
       this.dom.text('login-error','');this.enter();
     }catch(error:unknown){this.dom.text('login-error',this.message(error));}
     finally{submit.disabled=false;}
@@ -88,6 +102,7 @@ class AdminApplication {
   }
   private enter():void{
     this.dom.show('login-screen',false);this.dom.show('workspace',true);
+    this.sessionGeneration++;if(this.currentUser)this.drafts.activate(this.currentUser.id);
     this.dom.text('actor-name',this.currentUser?.name??'');
     this.dom.text('actor-role',this.currentUser?this.lang.t(this.currentUser.role):'');
     this.dom.show('add-user',this.currentUser?.role==='admin');
@@ -106,7 +121,7 @@ class AdminApplication {
     if(push&&location.hash!==`#${tab}`)history.pushState(null,'',`#${tab}`);
     this.dom.text('page-title',this.lang.t(tab));
     if(tab==='users')void this.loadUsers();
-    if(tab==='drafts')void this.loadDraft();
+    if(tab==='drafts')void this.drafts.load();
     if(tab==='audit')void this.loadAudit();
   }
   private message(error:unknown):string{
@@ -164,7 +179,7 @@ class AdminApplication {
     this.dom.byId<HTMLInputElement>('user-email').value=user?.email??'';
     this.dom.byId<HTMLSelectElement>('user-role').value=user?.role??'viewer';
     this.dom.byId<HTMLSelectElement>('user-status').value=user?.status??'active';
-    this.dom.text('form-status','');
+    this.dom.text('form-status','');this.dom.byId<HTMLButtonElement>('save-user').disabled=false;
     this.dom.text('modal-title',user?this.lang.t('editUser'):this.lang.t('newUser'));
     this.dom.show('delete-user',!!user&&this.currentUser?.role==='admin'&&user.role!=='admin'&&user.id!==this.currentUser.id);
     const editor=this.currentUser?.role==='editor';
@@ -180,17 +195,20 @@ class AdminApplication {
       status:this.selected?.status&&this.currentUser?.role==='editor'?this.selected.status:this.dom.byId<HTMLSelectElement>('user-status').value as Status,
       version:this.selected?.version??0,
     };
+    const generation=this.sessionGeneration;
     const button=this.dom.byId<HTMLButtonElement>('save-user');button.disabled=true;
     try{
       if(this.selected)await this.api.updateUser(this.selected.id,input);
       else await this.api.createUser(input);
+      if(generation!==this.sessionGeneration)return;
       this.dom.byId<HTMLDialogElement>('user-dialog').close();await this.loadUsers();
-    }catch(error:unknown){this.dom.text('form-status',this.message(error));}
-    finally{button.disabled=false;}
+    }catch(error:unknown){if(generation===this.sessionGeneration)this.dom.text('form-status',this.message(error));}
+    finally{if(generation===this.sessionGeneration)button.disabled=false;}
   }
   private async deleteUser():Promise<void>{
     if(!this.selected||!window.confirm(this.lang.t('confirmDelete')))return;
-    try{await this.api.deleteUser(this.selected.id);this.dom.byId<HTMLDialogElement>('user-dialog').close();await this.loadUsers();}
+    const generation=this.sessionGeneration;
+    try{await this.api.deleteUser(this.selected.id);if(generation!==this.sessionGeneration)return;this.dom.byId<HTMLDialogElement>('user-dialog').close();await this.loadUsers();}
     catch(error:unknown){this.dom.text('form-status',this.message(error));}
   }
   private exportUsers():void{
@@ -199,49 +217,13 @@ class AdminApplication {
     link.href=this.api.exportUrl(this.lang.current,this.dom.byId<HTMLInputElement>('search').value,this.dom.byId<HTMLSelectElement>('filter-role').value,this.dom.byId<HTMLSelectElement>('filter-status').value);
     link.rel='noopener';link.click();
   }
-  private async loadDraft():Promise<void>{
-    if(!this.currentUser)return;
-    this.dom.text('draft-status',this.lang.t('loading'));
-    try{
-      this.draftState=await this.api.draft();
-      this.dom.byId<HTMLInputElement>('draft-name').value=this.draftState.name;
-      this.dom.byId<HTMLInputElement>('draft-organization').value=this.draftState.organization;
-      this.dom.text('draft-status',this.lang.t('saved'));
-    }catch(error:unknown){this.dom.text('draft-status',this.message(error));}
-  }
-  private scheduleDraft():void{
-    this.dom.text('draft-status',this.lang.t('unsaved'));
-    if(this.draftTimeout)clearTimeout(this.draftTimeout);
-    this.draftTimeout=setTimeout(()=>{void this.saveDraft();},600);
-  }
-  private async saveDraft():Promise<void>{
-    if(!this.draftState)return;
-    if(this.draftTimeout){clearTimeout(this.draftTimeout);this.draftTimeout=null;}
-    if(this.draftInFlight){this.draftPending=true;return;}
-    const data:Draft={
-      name:this.dom.byId<HTMLInputElement>('draft-name').value,
-      organization:this.dom.byId<HTMLInputElement>('draft-organization').value,
-      version:this.draftState.version,
-    };
-    this.draftInFlight=true;this.dom.text('draft-status',this.lang.t('saving'));
-    try{
-      const updated=await this.api.saveDraft(data);
-      this.draftState=updated;
-      this.dom.text('draft-status',this.lang.t('saved'));
-    }catch(error:unknown){
-      this.dom.text('draft-status',this.message(error));
-      if(error instanceof ApiFailure && error.status===409)this.draftState=null;
-    }finally{
-      this.draftInFlight=false;
-      if(this.draftPending&&this.draftState){this.draftPending=false;void this.saveDraft();}
-    }
-  }
   private async loadAudit():Promise<void>{
+    const generation=this.sessionGeneration;
     try{
-      const rows=await this.api.audit();const tbody=this.dom.byId('audit-body');tbody.replaceChildren();
+      const rows=await this.api.audit();if(generation!==this.sessionGeneration||this.activeTab!=='audit')return;const tbody=this.dom.byId('audit-body');tbody.replaceChildren();
       for(const event of rows){const tr=document.createElement('tr');for(const cell of [new Date(event.createdAt).toLocaleString(this.lang.current),event.action,event.resourceId])tr.append(this.dom.node('td',cell));tbody.append(tr);}
       if(rows.length===0){const tr=document.createElement('tr');const td=this.dom.node('td',this.lang.t('emptyAudit'));td.setAttribute('colspan','3');tr.append(td);tbody.append(tr);}
-    }catch(error:unknown){this.dom.text('flash',this.message(error));}
+    }catch(error:unknown){if(generation===this.sessionGeneration)this.dom.text('flash',this.message(error));}
   }
 }
 

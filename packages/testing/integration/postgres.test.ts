@@ -112,7 +112,7 @@ class PostgresIntegrationSuite {
               await blocker.query('SELECT pg_stat_clear_snapshot()');
               const state = await blocker.query<{ waiting: boolean }>(
                 "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE $1) AS waiting",
-                ['SELECT * FROM users WHERE id=%FOR SHARE'],
+                ['SELECT * FROM users WHERE id=ANY%FOR UPDATE'],
               );
               if (state.rows[0]?.waiting) { waiting = true; break; }
               await new Promise(resolve => setTimeout(resolve, 10));
@@ -129,6 +129,36 @@ class PostgresIntegrationSuite {
           await repo.session(digest, user.id);
           await repo.mutate(actor, user.id, this.input(user, { role: 'viewer' }), randomUUID(), this.policy);
           await assert.rejects(new SessionService(repo).authenticate(digest), { code: 'unauthenticated' });
+        });
+        await context.test('Session-bound drafts always use the owner from the authenticated session', async () => {
+          const owner = await this.seed(repo,'viewer');const other = await this.seed(repo,'viewer');
+          const digest = this.tokens.digest(this.tokens.create());await repo.session(digest,owner.id);
+          const saved = await repo.saveDraftForSession(digest,{name:'Owner only',organization:'Private',version:0},this.policy);
+          assert.equal(saved.version,1);assert.equal((await repo.getDraft(other.id)).name,'');
+          assert.equal((await repo.loadDraftForSession(digest,this.policy)).name,'Owner only');
+          await repo.logout(digest);
+          await assert.rejects(repo.saveDraftForSession(digest,{name:'Rejected',organization:'',version:1},this.policy),{code:'unauthenticated'});
+          assert.equal((await repo.getDraft(owner.id)).name,'Owner only');
+        });
+        await context.test('Concurrent self edits produce a version conflict instead of a lock-upgrade deadlock', async () => {
+          const user = await this.seed(repo,'editor');const digest = this.tokens.digest(this.tokens.create());await repo.session(digest,user.id);
+          const results = await Promise.allSettled([
+            repo.mutateForSession(digest,user.id,this.input(user,{name:'Self one'}),randomUUID(),this.policy),
+            repo.mutateForSession(digest,user.id,this.input(user,{name:'Self two'}),randomUUID(),this.policy),
+          ]);
+          assert.equal(results.filter(result=>result.status==='fulfilled').length,1);
+          const failure=results.find(result=>result.status==='rejected');
+          assert.ok(failure?.status==='rejected'&&failure.reason.code==='version_conflict');
+        });
+        await context.test('Opposite-direction administrator edits use deterministic lock ordering', async () => {
+          const one=await this.seed(repo,'admin');const two=await this.seed(repo,'admin');
+          const first=this.tokens.digest(this.tokens.create());const second=this.tokens.digest(this.tokens.create());
+          await repo.session(first,one.id);await repo.session(second,two.id);
+          const results=await Promise.allSettled([
+            repo.mutateForSession(first,two.id,this.input(two,{name:'Second updated'}),randomUUID(),this.policy),
+            repo.mutateForSession(second,one.id,this.input(one,{name:'First updated'}),randomUUID(),this.policy),
+          ]);
+          assert.equal(results.filter(result=>result.status==='fulfilled').length,2);
         });
         await context.test('Repository rechecks live actor role before accepting a stale authorization', async () => {
           const stale = await this.seed(repo, 'editor');
