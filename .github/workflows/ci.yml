@@ -132,6 +132,33 @@ jobs:
         run: pnpm admin:build
       - name: Production build of class-based documentation and component workbench
         run: pnpm docs:build
+      - name: Prefer the official Ubuntu archive for browser dependency downloads
+        run: |
+          sudo python3 - <<'PYTHON'
+          from pathlib import Path
+          class HostedMirrorPreference:
+              def apply(self):
+                  path = Path('/etc/apt/apt-mirrors.txt')
+                  if not path.is_file() or path.is_symlink():
+                      print('Hosted mirror list unavailable; keeping runner defaults.')
+                      return
+                  original = path.read_bytes().decode('utf-8')
+                  azure = 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:1'
+                  archive = 'https://archive.ubuntu.com/ubuntu/\tpriority:2'
+                  lines = original.splitlines(keepends=True)
+                  azure_line, archive_line = azure + '\n', archive + '\n'
+                  if azure_line not in lines or archive_line not in lines:
+                      print('Mirror priorities already customized; keeping runner configuration.')
+                      return
+                  replacements = {
+                      azure_line: azure_line.replace('priority:1', 'priority:2'),
+                      archive_line: archive_line.replace('priority:2', 'priority:1'),
+                  }
+                  updated = ''.join(replacements.get(line, line) for line in lines)
+                  path.write_text(updated)
+                  print('Preferred existing official HTTPS archive; fallback mirrors and APT signature checks retained.')
+          HostedMirrorPreference().apply()
+          PYTHON
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Next.js contracts and bilingual reference application journeys
