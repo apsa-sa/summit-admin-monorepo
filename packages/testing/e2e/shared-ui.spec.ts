@@ -60,6 +60,10 @@ class SharedUiBrowserSuite {
             .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
             .analyze();
           expect(axe.violations).toEqual([]);
+          await page.screenshot({
+            path: `test-results/gallery-${locale}-${theme}.png`,
+            fullPage: true,
+          });
           await page
             .getByRole("button", {
               name: locale === "ar" ? "English" : "العربية",
@@ -70,10 +74,6 @@ class SharedUiBrowserSuite {
           await expect(page.locator("#gallery-density")).toHaveValue("compact");
           await expect(gallery.getByRole("checkbox")).toBeChecked();
           expect(errors).toEqual([]);
-          await page.screenshot({
-            path: `test-results/gallery-${locale}-${theme}.png`,
-            fullPage: true,
-          });
         });
       }
     test("class dialogs/drawers contain focus, close with Escape and restore trigger; no 360px/200% overflow", async ({
@@ -176,7 +176,9 @@ class SharedUiBrowserSuite {
         page.getByRole("cell", { name: "لا توجد نتائج", exact: true }),
       ).toBeVisible();
       await page.locator("#gallery-table-state").selectOption("loading");
-      await expect(page.getByRole("status")).toHaveText("جارٍ التحميل…");
+      await expect(
+        page.locator(".summit-showcase").getByRole("status"),
+      ).toHaveText("جارٍ التحميل…");
       await page.locator("#gallery-table-state").selectOption("ready");
       expect(
         (
