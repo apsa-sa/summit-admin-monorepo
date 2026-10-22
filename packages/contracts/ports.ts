@@ -20,3 +20,6 @@ export interface DraftStore {
 }
 export interface AuditStore { events(): Promise<AuditEvent[]>; }
 export interface HealthStore { health(): Promise<void>; }
+
+/** Installation-wide login admission; storage failures must reject authentication. */
+export interface LoginAttemptPolicy { check(key: string): void | Promise<void>; }

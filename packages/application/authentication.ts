@@ -1,13 +1,13 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
-import type { IdentityStore } from '../contracts/ports.js';
+import type { IdentityStore, LoginAttemptPolicy } from '../contracts/ports.js';
 import { DomainError, Validation } from '../core/index.js';
 import { SessionService } from '../auth/index.js';
-import { PasswordHasher, SessionToken, RateLimiter } from '../security/index.js';
+import { PasswordHasher, SessionToken } from '../security/index.js';
 export class AuthenticationService {
   constructor(private readonly identities: IdentityStore, private readonly sessions: SessionService,
-    private readonly hasher: PasswordHasher, private readonly tokens: SessionToken, private readonly limiter: RateLimiter) {}
+    private readonly hasher: PasswordHasher, private readonly tokens: SessionToken, private readonly limiter: LoginAttemptPolicy) {}
   async login(value: unknown, peer: string) {
-    this.limiter.check(peer);
+    await this.limiter.check(peer);
     const input = Validation.record(value);
     const email = Validation.text(input.email,254).toLowerCase();
     // Password whitespace is significant; never normalize a credential as display text.
