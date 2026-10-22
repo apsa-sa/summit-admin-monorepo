@@ -147,3 +147,26 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# SUMMIT development and privacy protections
+dist/
+.next/
+.turbo/
+coverage/
+apps/web-admin/public/apps/
+apps/web-admin/public/packages/
+apps/web-admin/public/api.js
+apps/web-admin/public/app.js
+apps/web-admin/public/localization.js
+*.pem
+*.p12
+*.pfx
+*.key
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+.pgpass
+credentials.json
+service-account.json
