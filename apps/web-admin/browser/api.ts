@@ -3,7 +3,6 @@
 import type { AuditEvent,Draft,User,UserInput,UserPage } from '../../../packages/contracts/index.js';
 import { ResponseContracts } from '../../../packages/contracts/decoders.js';
 import type { UserTablePreferences } from '../../../packages/contracts/table-preferences.js';
-import { TablePreferenceValidation } from '../../../packages/core/table-preferences.js';
 export class ApiFailure extends Error {constructor(readonly status:number,readonly code:string){super(code);}}
 export class AdminApiClient {
   private readonly contracts=new ResponseContracts();
@@ -35,8 +34,8 @@ export class AdminApiClient {
   deleteUser(id:string):Promise<void>{return this.request(`/api/users/${encodeURIComponent(id)}`,value=>this.contracts.deleted(value),{method:'DELETE'});}
   draft():Promise<Draft>{return this.request('/api/draft',value=>this.contracts.draft(value));}
   saveDraft(draft:Draft):Promise<Draft>{return this.request('/api/draft',value=>this.contracts.draft(value),{method:'PUT',body:JSON.stringify(draft)});}
-  tablePreferences():Promise<UserTablePreferences>{return this.request('/api/preferences/users',value=>new TablePreferenceValidation().parse(value));}
-  saveTablePreferences(value:UserTablePreferences):Promise<UserTablePreferences>{return this.request('/api/preferences/users',payload=>new TablePreferenceValidation().parse(payload),{method:'PUT',body:JSON.stringify(value)});}
+  tablePreferences():Promise<UserTablePreferences>{return this.request('/api/preferences/users',value=>this.contracts.tablePreferences(value));}
+  saveTablePreferences(value:UserTablePreferences):Promise<UserTablePreferences>{return this.request('/api/preferences/users',payload=>this.contracts.tablePreferences(payload),{method:'PUT',body:JSON.stringify(value)});}
   audit():Promise<AuditEvent[]>{return this.request('/api/audit',value=>this.contracts.audit(value));}
   exportUrl(locale:'ar'|'en',search:string,role:string,status:string):string{return `${this.base}/api/users/export?${new URLSearchParams({locale,search,role,status})}`;}
 }
