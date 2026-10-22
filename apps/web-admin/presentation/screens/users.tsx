@@ -126,6 +126,9 @@ export class UsersScreen extends WorkspaceScreen {
           </div>
         </div>
         {s.exportBusy && <p role="status">{m.t("exporting")}</p>}
+        {s.exportMessage && (
+          <p role={s.exportError ? "alert" : "status"}>{s.exportMessage}</p>
+        )}
         <form
           className="admin-filters"
           onSubmit={(event) => {

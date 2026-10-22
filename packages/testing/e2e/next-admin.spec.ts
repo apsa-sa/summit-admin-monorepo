@@ -269,6 +269,7 @@ class NextAdminBrowserSuite {
             locale === "ar" ? "تعذر الاتصال" : "Connection failed",
           );
           expect(page.url()).toBe(exportLocation);
+          await expect(page.locator("#admin-content").getByRole("cell", { name: edited, exact: true })).toBeVisible();
           await expect(page.locator("#admin-content")).toBeVisible();
           const excelDownload = page.waitForEvent("download");
           await page

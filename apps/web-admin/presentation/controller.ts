@@ -347,7 +347,7 @@ export class WorkspaceController {
     if (s.exportBusy || !s.user || !this.can("users:export")) return;
     const generation = this.store.epoch,
       q = s.query;
-    this.store.patch({ exportBusy: true, message: "", error: false });
+    this.store.patch({ exportBusy: true, exportMessage: "", exportError: false });
     try {
       const file = await this.api.downloadExport(
         s.locale,
@@ -360,14 +360,17 @@ export class WorkspaceController {
       if (generation === this.store.epoch) {
         this.downloads.save(file);
         this.store.patch({
-          message: new WorkspaceMessages(this.store.snapshot.locale).t(
+          exportMessage: new WorkspaceMessages(this.store.snapshot.locale).t(
             "downloadStarted",
           ),
-          error: false,
+          exportError: false,
         });
       }
     } catch (error: unknown) {
-      if (generation === this.store.epoch) this.failure(error);
+      if (generation === this.store.epoch) {
+        if (error instanceof ApiFailure && error.status === 401) this.failure(error);
+        else this.store.patch({ exportMessage: this.message(error), exportError: true });
+      }
     } finally {
       if (generation === this.store.epoch)
         this.store.patch({ exportBusy: false });

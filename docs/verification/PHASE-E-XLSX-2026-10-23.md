@@ -72,6 +72,11 @@ Tests added/strengthened:
   reads. A browser DOMParser independently checks every XML part, exact filtered
   row, header/direction, plain cells and no formulas/external relationships.
   Viewer direct binary request must be rejected, retaining all old assertions.
+  The initial offline E2E exposed a shared-state defect: download failure marked
+  the table failed too, removing its rows and duplicating alerts. Export message/
+  error state is now independent; controller tests assert retained page identity
+  and browser tests assert the edited cell remains visible, without weakening
+  the alert assertion or using first()/skips. The failed runs are preserved.
   All four Next journeys additionally abort the first Excel request, verify the
   visible connection error and unchanged URL, then explicitly retry a real download.
 
