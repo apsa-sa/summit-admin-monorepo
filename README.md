@@ -11,7 +11,7 @@ creating professional administration panels and reusable back-office tools.
 It helps software developers and their organizations bootstrap applications;
 it is **not** a shared hosted admin service that collects their customer data.
 
-**سوميت أساس مفتوح المصدر لمساعدة المطورين على بناء لوحات الإدارة**؛ وليس
+قمة أساس مفتوح المصدر لمساعدة المطورين على بناء لوحات الإدارة  وليس
 منصة مركزية تستضيف بيانات مستخدمي المطورين أو تتطلب حساباً لدى APSA.
 
 The intended distributable product combines reusable class-based TypeScript
