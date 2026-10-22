@@ -246,6 +246,11 @@ class NextAdminBrowserSuite {
           expect(csv).toContain(edited);
           expect(csv).not.toContain("password_hash");
           expect(csv).toContain(locale === "ar" ? "الاسم" : "Name");
+          const failedExport = await page.request.get(`${this.origin}/api/users/export?sort=unsupported`);
+          expect(failedExport.status()).toBe(422);
+          expect(failedExport.headers()["content-type"]).toMatch(/^application\/json\b/);
+          expect(failedExport.headers()["content-disposition"]).toBeUndefined();
+          expect(await failedExport.json()).toEqual({ error: "invalid_sort", requestId: failedExport.headers()["x-request-id"] });
           expect(
             (
               await new AxeBuilder({ page })

@@ -50,8 +50,9 @@ export class AdminHttpController {
       }
       if(pathname==='/api/users'&&method==='GET')return this.json(await this.users.list(digest,searchParams),headers);
       if(pathname==='/api/users/export'&&method==='GET'){
+        const csv=await this.users.export(digest,searchParams);
         headers.set('Content-Type','text/csv; charset=utf-8');headers.set('Content-Disposition','attachment; filename="summit-users.csv"');
-        return new Response(await this.users.export(digest,searchParams),{headers});
+        return new Response(csv,{headers});
       }
       if(pathname==='/api/audit'&&method==='GET')return this.json({rows:await this.audit.list(digest)},headers);
       const match=/^\/api\/users\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.exec(pathname);
