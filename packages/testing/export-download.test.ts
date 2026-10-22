@@ -19,6 +19,18 @@ class DownloadTransportSuite {
         await assert.rejects(new AdminApiClient('',async()=>response).downloadExport('en','','','','xlsx','name'),{code:'invalid_response'});
       }
     });
+    test("Malformed download headers cancel unread response bytes", async () => {
+      let cancelled = false;
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) { controller.enqueue(new Uint8Array([80, 75, 3, 4])); },
+        cancel() { cancelled = true; },
+      });
+      const transport: typeof fetch = async () => new Response(stream, {
+        headers: { ...this.headers, "content-type": "text/html" },
+      });
+      await assert.rejects(new AdminApiClient("", transport).downloadExport("en", "", "", "", "xlsx", "name"), { code: "invalid_response" });
+      assert.equal(cancelled, true);
+    });
     test("Export stream refuses oversized bodies and cancels the reader",async()=>{
       let cancelled=false;
       const stream=new ReadableStream<Uint8Array>({start(controller){controller.enqueue(new Uint8Array(32_000_001));},cancel(){cancelled=true;}});

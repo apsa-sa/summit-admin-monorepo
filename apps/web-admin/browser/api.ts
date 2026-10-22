@@ -206,8 +206,10 @@ export class AdminApiClient {
         response.headers.get("content-type") !== contentType ||
         response.headers.get("content-disposition") !==
           `attachment; filename="${filename}"`
-      )
+      ) {
+        await response.body?.cancel();
         throw new TypeError("Invalid download response");
+      }
       const reader = response.body?.getReader();
       if (!reader) throw new TypeError("Missing download body");
       const chunks: Uint8Array[] = [];

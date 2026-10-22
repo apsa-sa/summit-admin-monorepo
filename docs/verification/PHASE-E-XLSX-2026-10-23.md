@@ -47,7 +47,7 @@ current contracts, safe string encoding, localized roles/statuses and real style
 ## Direct tests / acceptance status
 
 Local direct evidence at initial checkpoint:
-- `pnpm check`: 112 unit/contracts, four native asset contracts, zero failed/skipped;
+- `pnpm check`: 113 unit/contracts, four native asset contracts, zero failed/skipped;
   strict types/build and actual packed ESM/declarations/CSS/notices PASS.
 - Manifest-only frozen-lock/offline validation: PASS. First registry-resolution
   attempt had no offline fflate metadata; no successful registry install is
@@ -64,14 +64,16 @@ Tests added/strengthened:
   session/permission/row-cap error representation added.
 - XML escaping/Unicode/control/literal escape handling; zero/max/oversize rows,
   text bounds, formula/macro/external-link absence and default CSV URL compatibility.
-- Native receiver/scope, malformed MIME/filename/signature, oversized stream
-  cancellation and session-end transport cancellation.
+- Native receiver/scope, malformed MIME/filename/signature, unread body and
+  oversized stream cancellation and session-end transport cancellation.
 - Controller scope snapshot/concurrent click guard; privacy on delayed account
   response; failure/retry without navigation; session expiry cleanup.
 - All four existing native and Next locale/theme journeys add real XLSX byte
   reads. A browser DOMParser independently checks every XML part, exact filtered
   row, header/direction, plain cells and no formulas/external relationships.
   Viewer direct binary request must be rejected, retaining all old assertions.
+  All four Next journeys additionally abort the first Excel request, verify the
+  visible connection error and unchanged URL, then explicitly retry a real download.
 
 The writer/independent-reader local contracts are VERIFIED locally. Overall
 feature acceptance stays PARTIAL until exact-head CI completes. Baseline main

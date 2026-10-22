@@ -247,6 +247,29 @@ class NextAdminBrowserSuite {
           expect(csv).toContain(edited);
           expect(csv).not.toContain("password_hash");
           expect(csv).toContain(locale === "ar" ? "الاسم" : "Name");
+          // A failed binary request must keep the authorized workspace and filters.
+          const exportLocation = page.url();
+          let failExport = true;
+          await page.route(`${this.origin}/api/users/export?**`, async (route) => {
+            if (
+              failExport &&
+              new URL(route.request().url()).searchParams.get("format") === "xlsx"
+            ) {
+              failExport = false;
+              await route.abort("internetdisconnected");
+            } else await route.continue();
+          });
+          await page
+            .getByRole("link", {
+              name: locale === "ar" ? "تصدير Excel المصرّح به" : "Export authorized Excel",
+              exact: true,
+            })
+            .click();
+          await expect(page.locator("#admin-content").getByRole("alert")).toContainText(
+            locale === "ar" ? "تعذر الاتصال" : "Connection failed",
+          );
+          expect(page.url()).toBe(exportLocation);
+          await expect(page.locator("#admin-content")).toBeVisible();
           const excelDownload = page.waitForEvent("download");
           await page
             .getByRole("link", {
