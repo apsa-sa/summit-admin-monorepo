@@ -25,8 +25,8 @@ export class AdminApiClient {
   async login(email:string,password:string):Promise<User>{return this.request('/api/login',value=>this.contracts.userEnvelope(value),{method:'POST',body:JSON.stringify({email,password})});}
   me():Promise<User>{return this.request('/api/me',value=>this.contracts.userEnvelope(value));}
   logout():Promise<void>{return this.request('/api/logout',value=>this.contracts.ok(value),{method:'POST'});}
-  users(page:number,search:string,role='',status=''):Promise<UserPage>{
-    return this.request(`/api/users?${new URLSearchParams({page:String(page),search,role,status})}`,value=>this.contracts.page(value));
+  users(page:number,search:string,role='',status='',sort:'name'|'created_at'='created_at'):Promise<UserPage>{
+    return this.request(`/api/users?${new URLSearchParams({page:String(page),search,role,status,sort})}`,value=>this.contracts.page(value));
   }
   createUser(input:UserInput):Promise<User>{return this.request('/api/users',value=>this.contracts.userEnvelope(value),{method:'POST',body:JSON.stringify(input)});}
   updateUser(id:string,input:UserInput):Promise<User>{return this.request(`/api/users/${encodeURIComponent(id)}`,value=>this.contracts.userEnvelope(value),{method:'PUT',body:JSON.stringify(input)});}

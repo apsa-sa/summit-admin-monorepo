@@ -22,7 +22,10 @@
     "test:integration": "node --import tsx --test packages/testing/integration/*.test.ts",
     "test:e2e": "playwright test",
     "build:packages": "turbo run build --filter=@summit/ui --filter=@summit/localization",
-    "test:packages": "node tooling/scripts/package-contract.mjs"
+    "test:packages": "node tooling/scripts/package-contract.mjs",
+    "admin:build": "turbo run build --filter=@summit/web-admin",
+    "admin:dev": "pnpm --filter @summit/web-admin dev",
+    "admin:start": "pnpm --filter @summit/web-admin start"
   },
   "dependencies": {
     "pg": "8.23.1"

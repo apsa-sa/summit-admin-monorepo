@@ -1,0 +1,308 @@
+// © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import { WorkspaceMessages } from "@summit/localization";
+import type { Locale } from "@summit/localization";
+import type { Theme } from "@summit/design-tokens";
+import type {
+  User,
+  UserInput,
+  UserQuery,
+} from "../../../packages/contracts/index.js";
+import { Validation } from "../../../packages/core/index.js";
+import { AuthorizationPolicy } from "../../../packages/core-rbac/index.js";
+import { ApiFailure } from "../browser/api.js";
+import { DraftAutosaveController } from "../browser/draft-controller.js";
+import { WorkspaceStore } from "./state.js";
+import type { ViewName } from "./state.js";
+import type {
+  WorkspaceApi,
+  WorkspaceNavigation,
+  WorkspacePreferenceWriter,
+} from "./ports.js";
+/** View orchestration only; server services remain authoritative for every mutation. */
+export class WorkspaceController {
+  private sequence = 0;
+  constructor(
+    readonly store: WorkspaceStore,
+    private readonly api: WorkspaceApi,
+    readonly drafts: DraftAutosaveController,
+    private readonly navigation: WorkspaceNavigation,
+    private readonly preferences: WorkspacePreferenceWriter,
+    private readonly policy: AuthorizationPolicy,
+  ) {}
+  can(action: string, resource?: User, input?: UserInput): boolean {
+    const actor = this.store.snapshot.user;
+    if (!actor) return false;
+    try {
+      this.policy.require(actor, action, resource, input);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  destinations(): ViewName[] {
+    return this.can("audit:read")
+      ? ["overview", "users", "drafts", "audit", "settings"]
+      : ["overview", "users", "drafts", "settings"];
+  }
+  private message(error: unknown): string {
+    return new WorkspaceMessages(this.store.snapshot.locale).error(error);
+  }
+  private failure(error: unknown): void {
+    if (error instanceof ApiFailure && error.status === 401) {
+      this.invalidate();
+      this.store.clear();
+    }
+    this.store.patch({ message: this.message(error), error: true });
+  }
+  private invalidate(): void {
+    this.store.advanceEpoch();
+    this.sequence++;
+    this.api.endSession();
+    this.drafts.deactivate();
+  }
+  async mount(): Promise<void> {
+    window.addEventListener("popstate", this.pop);
+    window.addEventListener("keydown", this.key);
+    window.addEventListener("offline", this.offline);
+    window.addEventListener("online", this.online);
+    this.store.patch({ offline: !navigator.onLine });
+    const generation = (this.store.advanceEpoch(), this.store.epoch);
+    try {
+      const user = await this.api.me();
+      if (generation === this.store.epoch) await this.enter(user);
+    } catch (error: unknown) {
+      if (generation === this.store.epoch) {
+        if (error instanceof ApiFailure && error.status === 401) {
+          if (this.store.snapshot.user) this.failure(error);
+        } else this.failure(error);
+      }
+    } finally {
+      if (generation === this.store.epoch) this.store.patch({ booting: false });
+    }
+  }
+  dispose(): void {
+    this.invalidate();
+    window.removeEventListener("popstate", this.pop);
+    window.removeEventListener("keydown", this.key);
+    window.removeEventListener("offline", this.offline);
+    window.removeEventListener("online", this.online);
+  }
+  private offline = (): void => {
+    this.store.patch({ offline: true });
+  };
+  private online = (): void => {
+    this.store.patch({ offline: false });
+  };
+  private pop = (): void => {
+    this.readLocation();
+    void this.load();
+  };
+  private key = (event: KeyboardEvent): void => {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === "k" &&
+      this.store.snapshot.user
+    ) {
+      event.preventDefault();
+      this.store.patch({ palette: !this.store.snapshot.palette });
+    }
+  };
+  preferencesChanged(locale: Locale, theme: Theme): void {
+    this.preferences.apply(locale, theme);
+    this.store.patch({ locale, theme });
+  }
+  private readLocation(): void {
+    try {
+      const value = this.navigation.read();
+      this.store.patch({
+        ...value,
+        view: this.destinations().includes(value.view)
+          ? value.view
+          : "overview",
+      });
+    } catch (error: unknown) {
+      this.store.patch({
+        view: "overview",
+        message: this.message(error),
+        error: true,
+      });
+    }
+  }
+  navigate(view: ViewName): void {
+    if (!this.destinations().includes(view)) return;
+    this.store.patch({
+      view,
+      mobile: false,
+      palette: false,
+      editing: undefined,
+      removing: null,
+      message: "",
+      error: false,
+    });
+    this.navigation.write(view, this.store.snapshot.query);
+    void this.load();
+  }
+  queryChanged(value: Partial<UserQuery>, load = false): void {
+    const query = { ...this.store.snapshot.query, ...value };
+    this.store.patch({ query });
+    if (load) {
+      this.navigation.write("users", query);
+      void this.load();
+    }
+  }
+  private async enter(user: User): Promise<void> {
+    this.store.patch({ user, logoutFailed: false, booting: false });
+    this.drafts.activate(user.id);
+    this.readLocation();
+    await this.load();
+  }
+  async login(email: string, password: string): Promise<void> {
+    if (this.store.snapshot.busy) return;
+    this.invalidate();
+    this.store.clear();
+    const generation = this.store.epoch;
+    this.store.patch({ busy: true });
+    try {
+      const user = await this.api.login(email, password);
+      if (generation === this.store.epoch) await this.enter(user);
+    } catch (error: unknown) {
+      if (generation === this.store.epoch) this.failure(error);
+    } finally {
+      if (generation === this.store.epoch)
+        this.store.patch({ busy: false, booting: false });
+    }
+  }
+  async logout(): Promise<void> {
+    if (this.store.snapshot.busy) return;
+    this.invalidate();
+    this.store.clear();
+    this.store.patch({ busy: true });
+    const generation = this.store.epoch;
+    try {
+      await this.api.logout();
+      if (generation === this.store.epoch) {
+        this.store.patch({ logoutFailed: false });
+        this.navigation.write("overview", this.store.snapshot.query, true);
+      }
+    } catch (error: unknown) {
+      if (generation === this.store.epoch)
+        this.store.patch({
+          logoutFailed: true,
+          error: true,
+          message: this.message(error),
+        });
+    } finally {
+      if (generation === this.store.epoch)
+        this.store.patch({ busy: false, booting: false });
+    }
+  }
+  async load(): Promise<void> {
+    const s = this.store.snapshot;
+    if (!s.user) return;
+    const generation = this.store.epoch,
+      sequence = ++this.sequence;
+    if (s.view === "drafts") {
+      await this.drafts.load();
+      return;
+    }
+    if (s.view === "settings") return;
+    this.store.patch({ loading: true, message: "", error: false });
+    try {
+      if (s.view === "audit") {
+        const audit = await this.api.audit();
+        if (generation === this.store.epoch && sequence === this.sequence)
+          this.store.patch({ audit });
+      } else {
+        const q: UserQuery =
+          s.view === "overview"
+            ? { search: "", role: "", status: "", page: 1, sort: "created_at" }
+            : s.query;
+        const page = await this.api.users(
+          q.page,
+          q.search,
+          q.role,
+          q.status,
+          q.sort,
+        );
+        if (generation === this.store.epoch && sequence === this.sequence)
+          this.store.patch({ page });
+      }
+    } catch (error: unknown) {
+      if (generation === this.store.epoch && sequence === this.sequence)
+        this.failure(error);
+    } finally {
+      if (generation === this.store.epoch && sequence === this.sequence)
+        this.store.patch({ loading: false });
+    }
+  }
+  edit(user: User | null): void {
+    this.store.patch({ editing: user, formError: "" });
+  }
+  async saveUser(value: unknown, id: string | null): Promise<void> {
+    if (this.store.snapshot.busy) return;
+    const generation = this.store.epoch;
+    this.store.patch({ busy: true, formError: "" });
+    try {
+      const input = Validation.user(value);
+      if (id) await this.api.updateUser(id, input);
+      else await this.api.createUser(input);
+      if (generation === this.store.epoch) {
+        this.store.patch({ editing: undefined });
+        await this.load();
+        if (generation === this.store.epoch)
+          this.store.patch({
+            message: new WorkspaceMessages(this.store.snapshot.locale).t(
+              "userSaved",
+            ),
+            error: false,
+          });
+      }
+    } catch (error: unknown) {
+      if (generation === this.store.epoch) {
+        if (error instanceof ApiFailure && error.status === 401)
+          this.failure(error);
+        else this.store.patch({ formError: this.message(error) });
+      }
+    } finally {
+      if (generation === this.store.epoch) this.store.patch({ busy: false });
+    }
+  }
+  async removeUser(): Promise<void> {
+    const user = this.store.snapshot.removing;
+    if (!user || this.store.snapshot.busy) return;
+    const generation = this.store.epoch;
+    this.store.patch({ busy: true });
+    try {
+      await this.api.deleteUser(user.id);
+      if (generation === this.store.epoch) {
+        this.store.patch({ removing: null });
+        await this.load();
+        if (generation === this.store.epoch)
+          this.store.patch({
+            message: new WorkspaceMessages(this.store.snapshot.locale).t(
+              "userRemoved",
+            ),
+            error: false,
+          });
+      }
+    } catch (error: unknown) {
+      if (generation === this.store.epoch) this.failure(error);
+    } finally {
+      if (generation === this.store.epoch) this.store.patch({ busy: false });
+    }
+  }
+  draftChanged(name: string, organization: string): void {
+    this.store.patch({
+      draft: { ...this.store.snapshot.draft, name, organization },
+    });
+    this.drafts.changed();
+  }
+  exportUrl(): string {
+    const s = this.store.snapshot,
+      q = s.query;
+    return this.api.exportUrl(s.locale, q.search, q.role, q.status);
+  }
+  href(view: ViewName): string {
+    return this.navigation.url(view, this.store.snapshot.query);
+  }
+}

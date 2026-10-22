@@ -1,7 +1,7 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import { Pool } from 'pg';
 import { randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { MigrationRunner } from '../../data-access/migration-runner.js';
 import { PasswordHasher,SessionToken } from '../../security/index.js';
 import { Validation } from '../../core/index.js';
 import { DatabaseFixture } from '../support/database-fixture.js';
@@ -15,7 +15,7 @@ export class JourneyFixture {
   async setup():Promise<void>{
     const approval=new DatabaseFixture();const pool=this.pool();
     try{
-      await pool.query(await readFile(new URL('../../data-access/migrations/001_initial.sql',import.meta.url),'utf8'));
+      await new MigrationRunner().apply(pool);
       const accounts:Record<string,JourneyAccount>={};
       for(const role of ['admin','editor','viewer']){
         const id=randomUUID();const password=` ${new SessionToken().create()} `;const email=`${id}@example.test`;

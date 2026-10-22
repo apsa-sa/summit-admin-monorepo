@@ -25,6 +25,11 @@
     "apps/next-proof/**",
     "node_modules",
     "packages/ui/src/**",
-    "**/dist/**"
+    "**/dist/**",
+    "apps/web-admin/app/**",
+    "apps/web-admin/next/**",
+    "apps/web-admin/presentation/**",
+    "apps/web-admin/proxy.ts",
+    "apps/web-admin/next.config.ts"
   ]
 }

@@ -128,6 +128,8 @@ jobs:
         run: pnpm test:integration
       - name: Production build of bounded Next.js proof
         run: pnpm proof:build
+      - name: Production build of class-based reference admin
+        run: pnpm admin:build
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Next.js contracts and bilingual reference application journeys

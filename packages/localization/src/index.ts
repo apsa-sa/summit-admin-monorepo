@@ -97,3 +97,5 @@ export class LocaleFormatter {
     }).format(date);
   }
 }
+export { WorkspaceMessages } from './workspace.js';
+export type { WorkspaceMessageKey } from './workspace.js';
