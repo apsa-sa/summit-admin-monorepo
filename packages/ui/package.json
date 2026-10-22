@@ -2,5 +2,37 @@
   "name": "@summit/ui",
   "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": {
+      "types": "./dist/css.d.ts",
+      "default": "./dist/index.css"
+    }
+  },
+  "scripts": {
+    "build": "node ../../tooling/scripts/library-build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@summit/design-tokens": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
 }

@@ -12,7 +12,9 @@
   "dependencies": {
     "next": "16.4.2",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "@summit/ui": "workspace:*",
+    "@summit/localization": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

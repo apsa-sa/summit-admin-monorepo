@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import { ProofPreferences } from '../presentation/preferences';
 import './proof.css';
+import '@summit/ui/css';
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const values = await cookies();
   const preferences = new ProofPreferences();

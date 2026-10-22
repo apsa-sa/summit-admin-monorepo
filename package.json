@@ -9,18 +9,20 @@
   },
   "scripts": {
     "dev": "node --import tsx apps/web-admin/server/main.ts",
-    "build": "tsc --noEmit && tsc -p apps/web-admin/tsconfig.browser.json",
-    "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test packages/testing/*.test.ts",
+    "build": "pnpm build:packages && tsc --noEmit && tsc -p apps/web-admin/tsconfig.browser.json",
+    "typecheck": "pnpm build:packages && tsc --noEmit",
+    "test": "pnpm build:packages && node --import tsx --test packages/testing/*.test.ts",
     "db:migrate": "node --import tsx tooling/scripts/database.ts migrate",
     "db:seed": "node --import tsx tooling/scripts/database.ts seed",
-    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm test:packages",
     "audit:publication": "node --import tsx tooling/scripts/publication-audit.ts",
-    "proof:build": "pnpm --filter @summit/next-proof build",
+    "proof:build": "turbo run build --filter=@summit/next-proof",
     "proof:dev": "pnpm --filter @summit/next-proof dev",
     "proof:start": "pnpm --filter @summit/next-proof start",
     "test:integration": "node --import tsx --test packages/testing/integration/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:packages": "turbo run build --filter=@summit/ui --filter=@summit/localization",
+    "test:packages": "node tooling/scripts/package-contract.mjs"
   },
   "dependencies": {
     "pg": "8.23.1"
@@ -31,6 +33,14 @@
     "@types/node": "22.20.5",
     "@types/pg": "8.23.1",
     "turbo": "2.11.10",
-    "@playwright/test": "1.64.1"
+    "@playwright/test": "1.64.1",
+    "@summit/design-tokens": "workspace:*",
+    "@summit/localization": "workspace:*",
+    "@summit/ui": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@axe-core/playwright": "4.14.0"
   }
 }

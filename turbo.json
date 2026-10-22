@@ -6,10 +6,16 @@
         "^build"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
       ]
     },
     "typecheck": {},
     "test": {}
-  }
+  },
+  "globalDependencies": [
+    "tooling/typescript/library.json",
+    "tooling/scripts/library-build.mjs"
+  ]
 }

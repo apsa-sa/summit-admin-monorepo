@@ -23,6 +23,8 @@
   ],
   "exclude": [
     "apps/next-proof/**",
-    "node_modules"
+    "node_modules",
+    "packages/ui/src/**",
+    "**/dist/**"
   ]
 }

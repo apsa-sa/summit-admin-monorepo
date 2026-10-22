@@ -132,3 +132,12 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Next.js contracts and bilingual reference application journeys
         run: pnpm test:e2e
+
+      - name: Preserve component gallery and browser evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: summit-ui-verification-${{ github.sha }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: warn

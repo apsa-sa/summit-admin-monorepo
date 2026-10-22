@@ -2,5 +2,27 @@
   "name": "@summit/design-tokens",
   "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": {
+      "types": "./dist/css.d.ts",
+      "default": "./dist/index.css"
+    }
+  },
+  "scripts": {
+    "build": "node ../../tooling/scripts/library-build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-arabic": "5.2.8"
+  }
 }
