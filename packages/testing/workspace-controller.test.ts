@@ -1,4 +1,5 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import type { ExportDownload } from "../contracts/exports.js";
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -36,19 +37,42 @@ class FakeWorkspaceApi implements WorkspaceApi {
   async tablePreferences():Promise<UserTablePreferences>{return this.preferenceLoad??new TablePreferenceValidation().defaults();}
   async saveTablePreferences(value:UserTablePreferences):Promise<UserTablePreferences>{this.preferenceWrites++;if(this.preferenceError)throw this.preferenceError;return {...value,version:value.version+1};}
   async audit():Promise<AuditEvent[]>{return [];}
+  downloadPending:Promise<ExportDownload>|null=null;downloadCalls=0;downloadArguments:Parameters<WorkspaceApi['downloadExport']>|null=null;
+  async downloadExport(...args:Parameters<WorkspaceApi['downloadExport']>):Promise<ExportDownload>{this.downloadCalls++;this.downloadArguments=args;if(!this.downloadPending)throw new Error('Unexpected export');return this.downloadPending;}
   exportUrl():string{return '/api/users/export';}
 }
 class WorkspaceControllerSuite {
   private setup(){
-    const api=new FakeWorkspaceApi(),store=new WorkspaceStore('ar','light',api.user,()=>{});
+    const api=new FakeWorkspaceApi(),store=new WorkspaceStore('ar','light',api.user,()=>{}),saved:ExportDownload[]=[];
     const presenter=new DraftPresenter(store,()=>api.endSession());
     const drafts=new DraftAutosaveController(api,presenter,{schedule:()=>{},cancel:()=>{}});
     const navigation:WorkspaceNavigation={read:()=>({view:'settings',query:store.snapshot.query}),write:()=>{},url:()=>'/'};
-    const controller=new WorkspaceController(store,api,drafts,navigation,{apply:()=>{}},new AuthorizationPolicy(),new TablePreferenceController(store,api,drafts),new BulkUserController(store,api,drafts,new AuthorizationPolicy()));
-    return {api,store,controller,presenter};
+    const controller=new WorkspaceController(store,api,drafts,navigation,{apply:()=>{}},new AuthorizationPolicy(),new TablePreferenceController(store,api,drafts),new BulkUserController(store,api,drafts,new AuthorizationPolicy()),{save:file=>{saved.push(file);},dispose:()=>{}});
+    return {api,store,controller,presenter,saved};
   }
   private page(user:User,page:number):UserPage{return {rows:[user],total:16,page,pageSize:8};}
   register():void{
+    test('Export snapshots the requested scope, prevents duplicate clicks and saves only after acknowledgement',async()=>{
+      const {api,store,controller,saved}=this.setup(),pending=new Deferred<ExportDownload>();api.downloadPending=pending.promise;
+      store.patch({query:{search:'scope',role:'viewer',status:'active',sort:'name',page:2}});
+      const result=controller.download('xlsx');await controller.download('xlsx');assert.equal(api.downloadCalls,1);assert.equal(store.snapshot.exportBusy,true);assert.equal(saved.length,0);
+      assert.deepEqual(api.downloadArguments,['ar','scope','viewer','active','xlsx','name']);
+      const file:ExportDownload={bytes:new ArrayBuffer(4),filename:'summit-users.xlsx',contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
+      pending.resolve(file);await result;assert.deepEqual(saved,[file]);assert.equal(store.snapshot.exportBusy,false);assert.equal(store.snapshot.error,false);
+    });
+    test('Late account A export never saves a file after logout invalidates the shared session epoch',async()=>{
+      const {api,store,controller,saved}=this.setup(),pending=new Deferred<ExportDownload>();api.downloadPending=pending.promise;
+      const result=controller.download('xlsx');await controller.logout();assert.equal(store.snapshot.exportBusy,false);
+      pending.resolve({bytes:new ArrayBuffer(4),filename:'summit-users.xlsx',contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});await result;assert.equal(saved.length,0);assert.equal(store.snapshot.user,null);
+    });
+    test('Failed export preserves account/filter context and supports explicit retry without navigation',async()=>{
+      const {api,store,controller,saved}=this.setup();store.patch({query:{...store.snapshot.query,search:'Keep filter'}});
+      api.downloadPending=Promise.reject(new ApiFailure(0,'network_error'));await controller.download('xlsx');assert.equal(saved.length,0);assert.equal(store.snapshot.exportBusy,false);assert.equal(store.snapshot.error,true);assert.equal(store.snapshot.query.search,'Keep filter');assert.equal(store.snapshot.user?.id,api.user.id);
+      api.downloadPending=Promise.resolve({bytes:new ArrayBuffer(4),filename:'summit-users.xlsx',contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});await controller.download('xlsx');assert.equal(saved.length,1);assert.equal(api.downloadCalls,2);assert.equal(store.snapshot.error,false);
+    });
+    test('Export session expiry clears private state and cannot produce a download',async()=>{
+      const {api,store,controller,saved}=this.setup();api.downloadPending=Promise.reject(new ApiFailure(401,'unauthenticated'));await controller.download('xlsx');assert.equal(saved.length,0);assert.equal(store.snapshot.user,null);assert.equal(store.snapshot.exportBusy,false);assert.equal(store.snapshot.error,true);
+    });
     test('Next workspace retains only the latest server table response without React state timing assumptions',async()=>{
       const {api,store,controller}=this.setup();store.patch({view:'users'});
       const first=controller.load();controller.queryChanged({page:2});const second=controller.load();

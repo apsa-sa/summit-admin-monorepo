@@ -1,4 +1,6 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import type { ExportDownload } from "../../../packages/contracts/exports.js";
+import type { FileDownloadPort } from "./ports.js";
 import type { Locale } from "@summit/localization";
 import type { Theme } from "@summit/design-tokens";
 import { Validation } from "../../../packages/core/index.js";
@@ -49,5 +51,41 @@ export class BrowserNavigation {
     const url = this.url(view, query);
     if (replace) history.replaceState(null, "", url);
     else history.pushState(null, "", url);
+  }
+}
+
+/** Only owned object URLs/timers are retained, and all are revoked on session end/unmount. */
+export class BrowserDownloads implements FileDownloadPort {
+  private readonly urls = new Map<string, number>();
+  save(file: ExportDownload): void {
+    if (!/^summit-users\.(csv|xlsx)$/.test(file.filename))
+      throw new TypeError("Invalid download filename");
+    const url = URL.createObjectURL(
+      new Blob([file.bytes], { type: file.contentType }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = file.filename;
+    anchor.hidden = true;
+    try {
+      document.body.append(anchor);
+      anchor.click();
+    } finally {
+      anchor.remove();
+      this.urls.set(
+        url,
+        window.setTimeout(() => {
+          URL.revokeObjectURL(url);
+          this.urls.delete(url);
+        }, 1000),
+      );
+    }
+  }
+  dispose(): void {
+    for (const [url, timer] of this.urls) {
+      window.clearTimeout(timer);
+      URL.revokeObjectURL(url);
+    }
+    this.urls.clear();
   }
 }

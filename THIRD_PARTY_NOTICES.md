@@ -33,3 +33,17 @@ logos or icon assets are bundled in the authored UI.
 This list supplements the baseline. It does not replace recursive license
 review, copied notice texts, dependency advisory checks or the release SBOM.
 No UI framework source, fonts or third-party image assets were copied.
+
+## Spreadsheet exporter addition (2026-10-23)
+
+| Package | Exact version | License | Usage |
+|---|---|---|---|
+| fflate | 0.8.3 | MIT, Copyright (c) 2026 Arjun Barrett | Server ZIP creation for macro-free SpreadsheetML; root development tests inspect generated archives |
+
+Verified against upstream tagged [package metadata](https://github.com/101arrowz/fflate/blob/v0.8.3/package.json)
+and [license](https://github.com/101arrowz/fflate/blob/v0.8.3/LICENSE).
+The exact upstream notice is retained in [fflate-0.8.3-LICENSE.txt](docs/licenses/fflate-0.8.3-LICENSE.txt).
+This version declares no runtime dependencies. Existing resolutions were not
+upgraded. This is an addition to the historical baseline above, not the final SBOM.
+The existing design-token build distributes Noto Sans Arabic 5.2.8 font subsets
+with their OFL notice; that earlier addition does not change this MIT notice.

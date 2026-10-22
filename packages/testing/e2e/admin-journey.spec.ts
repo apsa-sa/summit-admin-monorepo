@@ -3,6 +3,7 @@ import { test,expect,type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { JourneyFixture,type JourneyAccount } from './journey-fixture.js';
+import { WorkbookInspector } from './workbook-inspector.js';
 import { CreatedUserCleanup } from './created-user-cleanup.js';
 import { ResponseContracts } from '../../contracts/decoders.js';
 class Gate {
@@ -59,6 +60,9 @@ class AdminJourneySuite {
         const path=await download.path();expect(path).not.toBeNull();if(!path)throw new Error('CSV download path missing');
         const csv=await readFile(path,'utf8');expect(csv).toContain(edited);expect(csv).not.toContain('password_hash');
         expect(csv).toContain(locale==='ar'?'الاسم':'Name');
+        const xlsx=await page.request.get(`${JourneyFixture.origin}/api/users/export?${new URLSearchParams({format:'xlsx',locale,search:edited,role:'viewer',status:'active',sort:'name'})}`);
+        expect(xlsx.status()).toBe(200);expect(xlsx.headers()['content-type']).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        await new WorkbookInspector().inspect(page,await xlsx.body(),locale,edited);
         const failedExport=await page.request.get(`${JourneyFixture.origin}/api/users/export?sort=unsupported`);
         expect(failedExport.status()).toBe(422);
         expect(failedExport.headers()['content-type']).toMatch(/^application\/json\b/);

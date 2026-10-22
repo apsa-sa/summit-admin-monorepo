@@ -98,12 +98,34 @@ export class UsersScreen extends WorkspaceScreen {
               <Button onClick={() => c.edit(null)}>{m.t("create")}</Button>
             )}
             {c.can("users:export") && (
-              <a className="admin-action-link" href={c.exportUrl()}>
-                {m.t("exportCsv")}
-              </a>
+              <>
+                <a
+                  className="admin-action-link"
+                  href={c.exportUrl()}
+                  aria-disabled={s.exportBusy}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void c.download("csv");
+                  }}
+                >
+                  {m.t("exportCsv")}
+                </a>
+                <a
+                  className="admin-action-link"
+                  href={c.exportUrl("xlsx")}
+                  aria-disabled={s.exportBusy}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void c.download("xlsx");
+                  }}
+                >
+                  {m.t("exportExcel")}
+                </a>
+              </>
             )}
           </div>
         </div>
+        {s.exportBusy && <p role="status">{m.t("exporting")}</p>}
         <form
           className="admin-filters"
           onSubmit={(event) => {

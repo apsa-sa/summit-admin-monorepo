@@ -1,4 +1,8 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import type {
+  UserExportFormat,
+  ExportDownload,
+} from "../../../packages/contracts/exports.js";
 import type { Locale } from "@summit/localization";
 import type { Theme } from "@summit/design-tokens";
 import type {
@@ -33,11 +37,21 @@ export interface WorkspaceApi extends DraftApi, TablePreferenceApi {
   updateUser(id: string, input: UserInput): Promise<User>;
   deleteUser(id: string): Promise<void>;
   audit(): Promise<AuditEvent[]>;
+  downloadExport(
+    locale: Locale,
+    search: string,
+    role: string,
+    status: string,
+    format: UserExportFormat,
+    sort: "name" | "created_at",
+  ): Promise<ExportDownload>;
   exportUrl(
     locale: Locale,
     search: string,
     role: string,
     status: string,
+    format?: UserExportFormat,
+    sort?: "name" | "created_at",
   ): string;
 }
 export interface WorkspaceNavigation {
@@ -47,4 +61,9 @@ export interface WorkspaceNavigation {
 }
 export interface WorkspacePreferenceWriter {
   apply(locale: Locale, theme: Theme): void;
+}
+
+export interface FileDownloadPort {
+  save(file: ExportDownload): void;
+  dispose(): void;
 }
