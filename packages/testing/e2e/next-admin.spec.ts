@@ -7,10 +7,12 @@ import { Pool } from "pg";
 import AxeBuilder from "@axe-core/playwright";
 import { JourneyFixture } from "./journey-fixture.js";
 import { DatabaseFixture } from "../support/database-fixture.js";
+import { CreatedUserCleanup } from "./created-user-cleanup.js";
 import { ResponseContracts } from "../../contracts/decoders.js";
 class NextAdminBrowserSuite {
   private readonly origin = "http://127.0.0.1:3212";
   private readonly fixture = new JourneyFixture();
+  private readonly cleanup = new CreatedUserCleanup();
   private async login(
     page: Page,
     role: "admin" | "editor" | "viewer",
@@ -46,6 +48,9 @@ class NextAdminBrowserSuite {
     await expect(page.locator("#admin-content")).toBeVisible();
   }
   register(): void {
+    test.afterEach(async () => {
+      await this.cleanup.clean();
+    });
     for (const locale of ["ar", "en"] as const)
       for (const theme of ["light", "dark"] as const) {
         test(`Next class admin ${locale}/${theme}: login, draft, drawer CRUD, audit, CSV and revocation`, async ({
@@ -94,9 +99,13 @@ class NextAdminBrowserSuite {
             .click();
           await expect(page.locator("#admin-user-drawer")).toBeVisible();
           await page.locator("#admin-user-name").fill(name);
-          await page
-            .locator("#admin-user-email")
-            .fill(`${randomUUID()}@example.test`);
+          const email = `${randomUUID()}@example.test`;
+          await page.locator("#admin-user-email").fill(email);
+          const creation = page.waitForResponse(
+            (response) =>
+              response.url() === `${this.origin}/api/users` &&
+              response.request().method() === "POST",
+          );
           await page
             .locator("#admin-user-drawer")
             .getByRole("button", {
@@ -104,6 +113,12 @@ class NextAdminBrowserSuite {
               exact: true,
             })
             .click();
+          const createdResponse = await creation;
+          expect(createdResponse.status()).toBe(201);
+          const created = this.cleanup.track(
+            await createdResponse.json(),
+            email,
+          );
           await expect(page.locator("#admin-user-drawer")).not.toBeVisible();
           await page.locator("#admin-search").fill(name);
           await page
@@ -174,6 +189,64 @@ class NextAdminBrowserSuite {
           await expect(page.locator("#admin-content")).toContainText(
             "users:update",
           );
+          const auditBefore: unknown = await (
+            await page.request.get(`${this.origin}/api/audit`)
+          ).json();
+          expect(
+            new ResponseContracts()
+              .audit(auditBefore)
+              .some(
+                (event) =>
+                  event.action === "users:update" &&
+                  event.resourceId === created.id,
+              ),
+          ).toBe(true);
+          await nav
+            .getByRole("link", {
+              name: locale === "ar" ? "المستخدمون" : "Users",
+              exact: true,
+            })
+            .click();
+          await expect(row).toContainText(edited);
+          await row
+            .getByRole("button", {
+              name: locale === "ar" ? "حذف" : "Delete",
+              exact: true,
+            })
+            .click();
+          const removal = page.waitForResponse(
+            (response) =>
+              response.url() === `${this.origin}/api/users/${created.id}` &&
+              response.request().method() === "DELETE",
+          );
+          await page
+            .locator("#admin-delete-dialog")
+            .getByRole("button", {
+              name: locale === "ar" ? "حذف" : "Delete",
+              exact: true,
+            })
+            .click();
+          expect((await removal).status()).toBe(200);
+          await expect(page.locator("#admin-delete-dialog")).not.toBeVisible();
+          await expect(row).toHaveCount(0);
+          const auditAfter: unknown = await (
+            await page.request.get(`${this.origin}/api/audit`)
+          ).json();
+          const events = new ResponseContracts().audit(auditAfter);
+          expect(
+            events.some(
+              (event) =>
+                event.action === "users:delete" &&
+                event.resourceId === created.id,
+            ),
+          ).toBe(true);
+          expect(
+            events.some(
+              (event) =>
+                event.action === "users:update" &&
+                event.resourceId === created.id,
+            ),
+          ).toBe(true);
           await page
             .getByRole("button", {
               name: locale === "ar" ? "تسجيل الخروج" : "Sign out",

@@ -129,6 +129,27 @@ viewport enlargement, font-size reduction or assertion relaxation. Added a named
 mobile-200 screenshot before the same overflow assertion for inspectable evidence.
 All gates must pass again on the corrected head before accepting this increment.
 
+## Verified reflow head and owned fixture cleanup
+
+Commit 4bc799f, push run 39820396718: 67/67 units/contracts, 23/23 PostgreSQL,
+26/26 Chromium, strict builds/clean install/publication/dependency/Gitleaks PASS;
+zero fail/skip. This certifies that head only. The mobile-200 screenshot and the
+four real admin modes are actual test renders, not generated product mockups.
+
+Follow-up strengthens the existing four-mode journeys with actual Delete dialog
+interaction, exact created-resource audit checks before/after deletion, and
+retention of the update event after delete. A shared CreatedUserCleanup tracks
+only decoded newly-created viewer IDs with an expected random @example.test
+email. afterEach checks explicit test approval, loopback summit_test control DB,
+matching DATABASE_URL/TEST_DATABASE_URL, and exact ID/email/role before deletion.
+Unexpected ownership/role refuses cleanup. No broad prefix-based cleanup or
+unknown/production DB access. The original standalone journeys also record their
+own creations; all prior assertions remain. This fixes known fixture-teardown
+coverage: it previously removed the three login accounts, not newly-created
+user records. CI service disposal had bounded their lifetime, but a persistent
+approved local control DB could retain them. No archived adapter/migration/source
+is deleted. The strengthened follow-up head must pass all gates again.
+
 ## Remaining work, risk and rollback
 
 P1: direct combined-head fresh install, PostgreSQL, browser, security/advisory/

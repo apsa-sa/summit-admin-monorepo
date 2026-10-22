@@ -3,6 +3,7 @@ import { test,expect,type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { JourneyFixture,type JourneyAccount } from './journey-fixture.js';
+import { CreatedUserCleanup } from './created-user-cleanup.js';
 import { ResponseContracts } from '../../contracts/decoders.js';
 class Gate {
   readonly promise:Promise<void>;private resolve:()=>void=()=>{};
@@ -11,6 +12,7 @@ class Gate {
 }
 class AdminJourneySuite {
   private readonly fixture=new JourneyFixture();
+  private readonly cleanup=new CreatedUserCleanup();
   private async login(page:Page,account:JourneyAccount,locale:'ar'|'en'='ar',theme:'light'|'dark'='dark'):Promise<void>{
     const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(JourneyFixture.origin);
@@ -26,6 +28,7 @@ class AdminJourneySuite {
     await expect(page.locator('#password')).toHaveValue('');
   }
   register():void{
+    test.afterEach(async()=>{await this.cleanup.clean();});
     for(const locale of ['ar','en'] as const)for(const theme of ['light','dark'] as const){
       test(`Reference journey ${locale}/${theme}: login, resume draft, edit user, audit and scoped CSV`,async({page})=>{
         const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
@@ -41,8 +44,11 @@ class AdminJourneySuite {
         if(locale==='en')await page.locator('#language-button').click();
         if(theme==='light')await page.locator('#theme-button').click();
         await page.locator('#nav-users').click();await page.locator('#add-user').click();
-        await page.locator('#user-name').fill(name);await page.locator('#user-email').fill(`${randomUUID()}@example.test`);
-        await page.locator('#save-user').click();await expect(page.locator('#user-dialog')).not.toBeVisible();
+        const email=`${randomUUID()}@example.test`;
+        await page.locator('#user-name').fill(name);await page.locator('#user-email').fill(email);
+        const creation=page.waitForResponse(response=>response.url()===`${JourneyFixture.origin}/api/users`&&response.request().method()==='POST');
+        await page.locator('#save-user').click();
+        this.cleanup.track(await (await creation).json(),email);await expect(page.locator('#user-dialog')).not.toBeVisible();
         await page.locator('#search').fill(name);
         const row=page.locator('#users-body tr').filter({hasText:name});await expect(row).toHaveCount(1);
         await row.locator('button').click();const edited=`${name} <script>test</script>`;
