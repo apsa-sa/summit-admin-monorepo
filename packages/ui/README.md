@@ -29,6 +29,9 @@ for the real production Next.js consumer. This gallery is not the final admin.
 
 | Export | Props/contract |
 |---|---|
+| Card | CardProps: native section attributes/children; supply a heading or accessible name |
+| Alert | AlertProps: required title, children, optional info/success/warning/error tone; status or alert semantics, controlled by consumer |
+| Tooltip | TooltipProps: unique id, visible help-button label, plain text content (1–160 characters), explicit direction/theme; hover/focus/Escape |
 | Button | Native button props, variant primary/secondary/danger/ghost, loading; defaults type=button; loading disables |
 | Input / Select | Native props, invalid; class instance focus(); caller provides label/options |
 | Textarea | Native textarea props; class instance focus() |
@@ -56,3 +59,22 @@ CI browser; Firefox/WebKit/manual assistive-technology verification remains open
 
 العربية: مكونات عرض مبنية بالكلاسات مع عقود TypeScript واضحة. النصوص والصلاحيات
 والحفظ تأتي من التطبيق المستهلك، ولا تتضمن المكتبة بيانات إنتاجية أو اتصالاً بخادم.
+
+`apps/docs` consumes Card, Alert and Tooltip through the public built package.
+Tooltip owns a native help button; it does not accept arbitrary child controls,
+interactive content or disabled triggers. Essential instructions must also be
+visible in the form; a tooltip is supplementary. On focus or hover its text stays
+available until focus/pointer leaves or Escape dismisses it. Escape preserves
+focus and is consumed before an enclosing Dialog handles a second Escape.
+The instance owns and removes its portal and listeners. A portal stays inside
+its trigger's native dialog when present, with explicit direction/theme and
+viewport-bounded placement. No application state or business rules are owned by it.
+
+```tsx
+<Card aria-labelledby="example-title">
+  <h2 id="example-title">Account</h2>
+  <Alert title="Local example" tone="info">No changes are saved.</Alert>
+  <Tooltip id="account-help" label="About this example"
+    content="This preview does not send data to a server." direction="ltr" theme="light" />
+</Card>
+```

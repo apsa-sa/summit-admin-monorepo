@@ -48,10 +48,6 @@ body {
 .docs-card {
   margin-block: var(--summit-space-6);
   padding: min(var(--summit-space-6), 4vw);
-  background: var(--summit-surface);
-  border: 1px solid var(--summit-border);
-  border-radius: var(--summit-radius-lg);
-  min-inline-size: 0;
 }
 .docs-card pre,
 .summit-drawer pre {
@@ -105,4 +101,9 @@ body {
 
 .docs-example .summit-table {
   min-inline-size: 38rem;
+}
+
+.docs-example .summit-table th {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }

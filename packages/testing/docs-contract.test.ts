@@ -71,8 +71,10 @@ class DocsContractSuite {
         assert.ok(entry.contract.length > 10);
         assert.ok(entry.source.startsWith("packages/ui/src/"));
       }
+      for (const name of ["Card", "Alert", "Tooltip"])
+        assert.ok(entries.some((entry) => entry.name === name));
       assert.equal(
-        entries.some((entry) => String(entry.name) === "Tooltip"),
+        entries.some((entry) => String(entry.name) === "Calendar"),
         false,
       );
     });

@@ -270,3 +270,46 @@
     outline: 2px solid Highlight;
   }
 }
+
+.summit-card {
+  min-inline-size: 0;
+  padding: var(--summit-space-6);
+  background: var(--summit-surface);
+  border: 1px solid var(--summit-border);
+  border-radius: var(--summit-radius-lg);
+}
+.summit-alert {
+  padding: var(--summit-space-4);
+  border: 1px solid var(--summit-border);
+  border-inline-start: 4px solid var(--summit-info);
+  border-radius: var(--summit-radius-md);
+  background: var(--summit-surface);
+  color: var(--summit-foreground);
+}
+.summit-alert--success {
+  border-inline-start-color: var(--summit-success);
+}
+.summit-alert--warning {
+  border-inline-start-color: var(--summit-warning);
+}
+.summit-alert--error {
+  border-inline-start-color: var(--summit-danger);
+}
+.summit-tooltip {
+  position: fixed;
+  z-index: var(--summit-layer-toast);
+  inline-size: max-content;
+  max-inline-size: min(20rem, calc(100vw - 2 * var(--summit-space-4)));
+  padding-block: var(--summit-space-2);
+  background: transparent;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.summit-tooltip-text {
+  padding: var(--summit-space-2) var(--summit-space-3);
+  background: var(--summit-surface);
+  color: var(--summit-foreground);
+  border: 1px solid var(--summit-border);
+  border-radius: var(--summit-radius-sm);
+  box-shadow: var(--summit-shadow);
+}

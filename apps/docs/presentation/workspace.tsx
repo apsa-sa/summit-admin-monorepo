@@ -2,7 +2,7 @@
 "use client";
 import { Component } from "react";
 import type { ReactNode } from "react";
-import { Button, Tabs } from "@summit/ui";
+import { Button, Tabs, Card, Alert } from "@summit/ui";
 import { DocsMessages, WorkspaceMessages } from "@summit/localization";
 import type { DocsPreferences } from "../next/preferences.js";
 import { DocsCompositionRoot } from "./composition-root";
@@ -80,8 +80,8 @@ export class DocsWorkspace extends Component<DocsPreferences, State> {
         <main id="docs-main" tabIndex={-1} className="docs-main">
           <h1>{m.t("title")}</h1>
           <p className="docs-lead">{m.t("intro")}</p>
-          <p role="note">{m.t("status")}</p>
-          <section
+          <Alert title={m.t("status")}>{m.t("catalogueHint")}</Alert>
+          <Card
             id="docs-start"
             className="docs-card"
             aria-labelledby="docs-start-title"
@@ -105,8 +105,8 @@ pnpm admin:dev`}</code>
 NODE_ENV=production pnpm docs:build
 NODE_ENV=production pnpm docs:start`}</code>
             </pre>
-          </section>
-          <section
+          </Card>
+          <Card
             id="docs-components"
             className="docs-card"
             aria-labelledby="docs-components-title"
@@ -145,8 +145,8 @@ NODE_ENV=production pnpm docs:start`}</code>
                 },
               ]}
             />
-          </section>
-          <section
+          </Card>
+          <Card
             id="docs-contracts"
             className="docs-card"
             aria-labelledby="docs-contracts-title"
@@ -173,7 +173,7 @@ packages/data-access → independent PostgreSQL adapters
 apps/web-admin/server/composition-root.ts → wiring
 apps/web-admin/presentation → class screens and controllers`}</code>
             </pre>
-          </section>
+          </Card>
         </main>
         <footer>
           <p>{m.t("license")}</p>

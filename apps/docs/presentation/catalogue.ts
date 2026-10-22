@@ -5,10 +5,26 @@ export interface ComponentContract {
   readonly contract: string;
   readonly source: string;
 }
-/** Names are checked against actual built UI exports. No unfinished Tooltip/Calendar is advertised. */
+/** Names are checked against actual built UI exports. No unfinished Calendar is advertised. */
 export class ComponentCatalogue {
   entries(): readonly ComponentContract[] {
     return [
+      {
+        name: "Card",
+        contract: "CardProps · semantic section and native attributes",
+        source: "packages/ui/src/surfaces.tsx",
+      },
+      {
+        name: "Alert",
+        contract: "AlertProps · title, tone, children and native attributes",
+        source: "packages/ui/src/surfaces.tsx",
+      },
+      {
+        name: "Tooltip",
+        contract:
+          "TooltipProps · id, label, short content, direction, theme; owned help button",
+        source: "packages/ui/src/tooltip.tsx",
+      },
       {
         name: "Button",
         contract: "ButtonProps · native button attributes, variant, loading",

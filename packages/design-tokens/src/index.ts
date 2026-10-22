@@ -13,6 +13,9 @@ export interface Palette {
   readonly border: string;
   readonly focus: string;
   readonly danger: string;
+  readonly success: string;
+  readonly warning: string;
+  readonly info: string;
   readonly onDanger: string;
   readonly dangerHover: string;
   readonly earth: string;
@@ -35,6 +38,9 @@ export class TokenCatalog {
     border: "#7A817C",
     focus: "#1B4D3E",
     danger: "#A51D2D",
+    success: "#166534",
+    warning: "#854D0E",
+    info: "#1E40AF",
     onDanger: "#FFFFFF",
     dangerHover: "#821625",
     earth: "#8C7A6B",
@@ -55,6 +61,9 @@ export class TokenCatalog {
     border: "#788398",
     focus: "#D4AF37",
     danger: "#FF9AA9",
+    success: "#86EFAC",
+    warning: "#FDE047",
+    info: "#93C5FD",
     onDanger: "#090A0F",
     dangerHover: "#FFB9C3",
     earth: "#C5B3A3",

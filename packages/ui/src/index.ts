@@ -19,3 +19,7 @@ export { Table } from "./table.js";
 export type { TableProps, TableColumn } from "./table.js";
 export { Pagination } from "./pagination.js";
 export type { PaginationProps } from "./pagination.js";
+export { Card, Alert } from "./surfaces.js";
+export type { CardProps, AlertProps, AlertTone } from "./surfaces.js";
+export { Tooltip } from "./tooltip.js";
+export type { TooltipProps } from "./tooltip.js";

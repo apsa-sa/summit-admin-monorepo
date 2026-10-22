@@ -2,6 +2,8 @@
 import type { Locale } from "./index.js";
 const en = Object.freeze({
   component: "Component",
+  help: "About this example",
+  helpText: "This example is local. No information is sent to a server.",
   notes: "Example notes",
   title: "Developer documentation",
   intro:
@@ -58,6 +60,8 @@ const en = Object.freeze({
 });
 export type DocsMessageKey = keyof typeof en;
 const ar: Readonly<Record<DocsMessageKey, string>> = Object.freeze({
+  help: "حول هذا المثال",
+  helpText: "هذا المثال محلي. لا تُرسل أي معلومات إلى خادم.",
   component: "المكوّن",
   notes: "ملاحظات تجريبية",
   title: "توثيق المطور",

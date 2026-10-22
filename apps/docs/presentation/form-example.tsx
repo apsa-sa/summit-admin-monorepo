@@ -12,6 +12,7 @@ import {
   Dialog,
   Drawer,
   Toast,
+  Tooltip,
 } from "@summit/ui";
 import {
   DocsMessages,
@@ -95,6 +96,13 @@ export class DocsFormExample extends Component<DocsPreferences, State> {
           >
             {m.t("notify")}
           </Button>
+          <Tooltip
+            id="docs-help-tip"
+            label={m.t("help")}
+            content={m.t("helpText")}
+            direction={local.direction}
+            theme={this.props.theme}
+          />
           <Button disabled>{m.t("disabled")}</Button>
           <Button loading>{m.t("loading")}</Button>
         </div>
@@ -108,6 +116,13 @@ export class DocsFormExample extends Component<DocsPreferences, State> {
           theme={this.props.theme}
         >
           <p>{this.state.name || m.t("sample")}</p>
+          <Tooltip
+            id="docs-dialog-tip"
+            label={m.t("help")}
+            content={m.t("helpText")}
+            direction={local.direction}
+            theme={this.props.theme}
+          />
           <FormField id="docs-dialog-input" label={m.t("field")}>
             <Input />
           </FormField>

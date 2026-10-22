@@ -92,7 +92,14 @@ class SharedPackageSuite {
       for (const theme of ["light", "dark"] as const) {
         const p = new TokenCatalog().palette(theme);
         for (const surface of [p.surface, p.background, p.muted]) {
-          for (const text of [p.foreground, p.secondary, p.danger])
+          for (const text of [
+            p.foreground,
+            p.secondary,
+            p.danger,
+            p.success,
+            p.warning,
+            p.info,
+          ])
             assert.ok(
               contrast.ratio(text, surface) >= 4.5,
               `${theme} text ${text}/${surface}`,

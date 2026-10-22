@@ -1,5 +1,6 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import { test, expect } from "@playwright/test";
+import { EvidenceCapture } from "./evidence-capture.js";
 import AxeBuilder from "@axe-core/playwright";
 import { DocsMessages, Localization } from "@summit/localization";
 class DocumentationBrowserSuite {
@@ -34,6 +35,30 @@ class DocumentationBrowserSuite {
             "data-summit-theme",
             theme,
           );
+          // New surfaces are real public package consumers, not catalogue-only names.
+          await expect(page.locator("#docs-start")).toHaveClass(/summit-card/);
+          await expect(page.locator(".docs-main > .summit-alert")).toHaveRole(
+            "status",
+          );
+          await expect(
+            page.locator(".docs-main > .summit-alert"),
+          ).toContainText(m.t("status"));
+          const help = page.locator('[aria-describedby="docs-help-tip"]'),
+            tip = page.locator("#docs-help-tip");
+          await help.hover();
+          await expect(tip).toBeVisible();
+          await tip.hover();
+          await expect(tip).toBeVisible();
+          await page.locator("h1").hover();
+          await expect(tip).toBeHidden();
+          await help.focus();
+          await expect(tip).toBeVisible();
+          await expect(help).toHaveAccessibleDescription(m.t("helpText"));
+          await expect(tip).toHaveAttribute("dir", local.direction);
+          await expect(tip).toHaveAttribute("data-summit-theme", theme);
+          await page.keyboard.press("Escape");
+          await expect(tip).toBeHidden();
+          await expect(help).toBeFocused();
           const name = "قمة <script>safe</script>";
           await page.locator("#docs-example-name").fill(name);
           await page
@@ -51,6 +76,28 @@ class DocumentationBrowserSuite {
           await expect(page.locator("#docs-example-dialog script")).toHaveCount(
             0,
           );
+          const dialogHelp = page.locator(
+              '[aria-describedby="docs-dialog-tip"]',
+            ),
+            dialogTip = page.locator("#docs-dialog-tip");
+          await dialogHelp.focus();
+          await expect(dialogTip).toBeVisible();
+          // Visibility alone cannot prove a portal paints above a native modal backdrop.
+          expect(
+            await dialogTip.evaluate((node) => {
+              const r = node.getBoundingClientRect();
+              return node.contains(
+                document.elementFromPoint(
+                  r.left + r.width / 2,
+                  r.top + r.height / 2,
+                ),
+              );
+            }),
+          ).toBe(true);
+          await page.keyboard.press("Escape");
+          await expect(dialogTip).toBeHidden();
+          await expect(dialogHelp).toBeFocused();
+          await expect(page.locator("#docs-example-dialog")).toBeVisible();
           await page.keyboard.press("Escape");
           await expect(page.locator("#docs-open-dialog")).toBeFocused();
           await page
@@ -111,10 +158,7 @@ class DocumentationBrowserSuite {
                 .analyze()
             ).violations,
           ).toEqual([]);
-          await page.screenshot({
-            path: `test-results/docs-${locale}-${theme}.png`,
-            fullPage: true,
-          });
+          await new EvidenceCapture().fullPage(page, `docs-${locale}-${theme}`);
           await page.locator("#docs-workbench-tab-form").click();
           await expect(page.locator("#docs-example-name")).toHaveValue(name);
           let navigations = 0;
@@ -235,6 +279,25 @@ class DocumentationBrowserSuite {
       await page.evaluate(() => {
         document.documentElement.style.fontSize = "200%";
       });
+      await page.locator("#docs-workbench-tab-form").click();
+      const help = page.locator('[aria-describedby="docs-help-tip"]'),
+        tip = page.locator("#docs-help-tip");
+      await help.focus();
+      await expect(tip).toBeVisible();
+      expect(
+        await tip.evaluate((node) => {
+          const r = node.getBoundingClientRect();
+          return (
+            r.left >= 0 &&
+            r.right <= innerWidth &&
+            r.top >= 0 &&
+            r.bottom <= innerHeight
+          );
+        }),
+      ).toBe(true);
+      await page.keyboard.press("Escape");
+      await expect(tip).toBeHidden();
+      await page.locator("#docs-workbench-tab-catalogue").click();
       const region = page.locator(
         "#docs-workbench-panel-catalogue .summit-table-scroll",
       );
@@ -248,10 +311,7 @@ class DocumentationBrowserSuite {
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
-      await page.screenshot({
-        path: "test-results/docs-mobile-ar-dark-200.png",
-        fullPage: true,
-      });
+      await new EvidenceCapture().fullPage(page, "docs-mobile-ar-dark-200");
     });
   }
 }
