@@ -20,6 +20,10 @@ import {
   RateLimiter,
 } from "../security/index.js";
 import { SafeLogger } from "../observability/index.js";
+import { SpreadsheetExporter } from "../exports/spreadsheet.js";
+import { SpreadsheetText } from "../exports/spreadsheet-text.js";
+import { unzipSync, strFromU8 } from "fflate";
+import type { BinaryUserExporter } from "../contracts/exports.js";
 import { CsvExporter } from "../exports/index.js";
 import type { User, Actor, UserPage } from "../contracts/index.js";
 import type {
@@ -104,7 +108,11 @@ class ExportContractFixture {
   readonly store = new ExportStores();
   readonly logger = new ExportLogger();
   readonly controller: AdminHttpController;
-  constructor() {
+  constructor(
+    exporters: readonly BinaryUserExporter[] = [
+      new SpreadsheetExporter(new SpreadsheetText()),
+    ],
+  ) {
     const sessions = new SessionService(this.store),
       policy = new AuthorizationPolicy(),
       tokens = new SessionToken();
@@ -121,6 +129,7 @@ class ExportContractFixture {
         sessions,
         policy,
         new CsvExporter(),
+        exporters,
       ),
       new DraftApplicationService(this.store, policy),
       new AuditApplicationService(this.store, sessions, policy),
@@ -213,6 +222,83 @@ class ExportResponseSuite {
           code: "internal_error",
         },
       ]);
+    });
+    test("XLSX success is a real bounded string-only workbook with Arabic headers and no credential columns", async () => {
+      const fixture = new ExportContractFixture();
+      for (const locale of ["ar", "en"]) {
+        const response = await fixture.response(
+          `?format=xlsx&locale=${locale}&sort=name&search=scope`,
+        );
+        assert.equal(response.status, 200);
+        assert.equal(
+          response.headers.get("content-type"),
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
+        assert.equal(
+          response.headers.get("content-disposition"),
+          'attachment; filename="summit-users.xlsx"',
+        );
+        const archive = unzipSync(new Uint8Array(await response.arrayBuffer()));
+        assert.deepEqual(
+          Object.keys(archive).sort(),
+          [
+            "[Content_Types].xml",
+            "_rels/.rels",
+            "xl/_rels/workbook.xml.rels",
+            "xl/styles.xml",
+            "xl/workbook.xml",
+            "xl/worksheets/sheet1.xml",
+          ].sort(),
+        );
+        const sheet = strFromU8(archive["xl/worksheets/sheet1.xml"]!);
+        assert.ok(sheet.includes(locale === "ar" ? "الاسم" : "Name"));
+        assert.ok(sheet.includes(`rightToLeft="${locale === "ar" ? 1 : 0}"`));
+        assert.ok(sheet.includes('t="inlineStr"'));
+        assert.ok(sheet.includes("=2+2"));
+        assert.doesNotMatch(sheet, /<f[ >]|password_hash|<hyperlink/);
+      }
+    });
+    test("Unsupported binary export format/locale fails as JSON before querying storage", async () => {
+      for (const [query, code] of [
+        ["?format=exe", "invalid_export_format"],
+        ["?format=xlsx&locale=unknown", "invalid_export_locale"],
+      ]) {
+        const fixture = new ExportContractFixture();
+        await fixture.error(await fixture.response(query), 422, code!);
+        assert.equal(fixture.store.listCalls, 0);
+      }
+    });
+    test("XLSX enforces server export permission, session validity, row cap and provider availability", async () => {
+      const viewer = new ExportContractFixture();
+      viewer.store.actor = { id: viewer.store.user.id, role: "viewer" };
+      await viewer.error(
+        await viewer.response("?format=xlsx"),
+        403,
+        "forbidden",
+      );
+      assert.equal(viewer.store.listCalls, 0);
+      const expired = new ExportContractFixture();
+      expired.store.actor = null;
+      await expired.error(
+        await expired.response("?format=xlsx"),
+        401,
+        "unauthenticated",
+      );
+      assert.equal(expired.store.listCalls, 0);
+      const limited = new ExportContractFixture();
+      limited.store.failure = new DomainError(422, "export_limit");
+      await limited.error(
+        await limited.response("?format=xlsx"),
+        422,
+        "export_limit",
+      );
+      const absent = new ExportContractFixture([]);
+      await absent.error(
+        await absent.response("?format=xlsx"),
+        503,
+        "export_unavailable",
+      );
+      assert.equal(absent.store.listCalls, 0);
     });
     test("Unauthenticated CSV request is rejected before storage or attachment setup", async () => {
       const fixture = new ExportContractFixture();

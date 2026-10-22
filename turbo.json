@@ -12,7 +12,29 @@
       ]
     },
     "typecheck": {},
-    "test": {}
+    "test": {},
+    "@summit/web-admin#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/application/*.ts",
+        "$TURBO_ROOT$/packages/auth/*.ts",
+        "$TURBO_ROOT$/packages/contracts/*.ts",
+        "$TURBO_ROOT$/packages/core/*.ts",
+        "$TURBO_ROOT$/packages/core-rbac/*.ts",
+        "$TURBO_ROOT$/packages/data-access/*.ts",
+        "$TURBO_ROOT$/packages/exports/*.ts",
+        "$TURBO_ROOT$/packages/observability/*.ts",
+        "$TURBO_ROOT$/packages/security/*.ts",
+        "$TURBO_ROOT$/packages/data-access/migrations/*.sql"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    }
   },
   "globalDependencies": [
     "tooling/typescript/library.json",

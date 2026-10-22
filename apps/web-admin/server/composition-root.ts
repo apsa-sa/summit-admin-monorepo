@@ -6,6 +6,8 @@ import { SessionService } from '../../../packages/auth/index.js';
 import { AuthorizationPolicy } from '../../../packages/core-rbac/index.js';
 import { PasswordHasher,SessionToken,RateLimiter } from '../../../packages/security/index.js';
 import { SafeLogger } from '../../../packages/observability/index.js';
+import { SpreadsheetExporter } from '../../../packages/exports/spreadsheet.js';
+import { SpreadsheetText } from '../../../packages/exports/spreadsheet-text.js';
 import { CsvExporter } from '../../../packages/exports/index.js';
 import { AuthenticationService } from '../../../packages/application/authentication.js';
 import { UserApplicationService } from '../../../packages/application/users.js';
@@ -32,7 +34,7 @@ export class AdminCompositionRoot {
     const tokens=new SessionToken();const logger=new SafeLogger();const body=new JsonBody();
     this.controller=new AdminHttpController(
       new AuthenticationService(this.repository.identities,sessions,new PasswordHasher(),tokens,attempts === 'database' ? new PostgresRateLimiter(this.repository.pool) : new RateLimiter()),
-      new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter()),
+      new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter(),[new SpreadsheetExporter(new SpreadsheetText())]),
       new DraftApplicationService(this.repository.drafts,policy),new AuditApplicationService(this.repository.audit,sessions,policy),
       this.repository,new SessionCookie(tokens,parsed.protocol==='https:'),body,logger,origin,
       new TablePreferenceService(new PostgresTablePreferenceRepository(this.repository.pool,new PostgresSessionGuard(),new TablePreferenceValidation()),policy,new TablePreferenceValidation()));

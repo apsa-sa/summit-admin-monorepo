@@ -83,6 +83,10 @@ const en = Object.freeze({
   deleteHint:
     "The selected user and their sessions/draft will be removed. The audit event is retained.",
   exportCsv: "Export authorized CSV",
+  exportExcel: "Export authorized Excel",
+  exporting: "Preparing the requested download…",
+  downloadStarted: "Download started",
+  exportLimit: "More than 10,000 records match. Narrow the filters and export again.",
   createdAt: "Created",
   version: "Version",
   page: "Page",
@@ -196,6 +200,10 @@ const ar: Readonly<Record<WorkspaceMessageKey, string>> = Object.freeze({
   deleteHint:
     "سيُحذف المستخدم المحدد وجلساته ومسودته، مع الاحتفاظ بحدث التدقيق.",
   exportCsv: "تصدير CSV المصرّح به",
+  exportExcel: "تصدير Excel المصرّح به",
+  exporting: "جارٍ تجهيز الملف المطلوب…",
+  downloadStarted: "بدأ تنزيل الملف",
+  exportLimit: "تتجاوز النتائج 10 آلاف سجل. ضيّق التصفية ثم أعد التصدير.",
   createdAt: "تاريخ الإنشاء",
   version: "الإصدار",
   page: "الصفحة",
@@ -244,6 +252,7 @@ export class WorkspaceMessages {
     if (code === "not_configured") return this.t("notConfigured");
     if (code === "email_exists") return this.t("emailExists");
     if (code === "version_conflict") return this.t("conflict");
+    if (code === "export_limit") return this.t("exportLimit");
     if (code === "network_error") return this.t("network");
     if (status === 401) return this.t("expired");
     if (status === 403) return this.t("forbidden");

@@ -1,4 +1,8 @@
 // © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.
+import type {
+  UserExportFormat,
+  ExportDownload,
+} from "../../../packages/contracts/exports.js";
 // SPDX-License-Identifier: MIT
 import type {
   AuditEvent,
@@ -32,9 +36,20 @@ export class AdminApiClient {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000)
       throw new RangeError("Invalid request deadline");
   }
-  private async request<T>(
+  private request<T>(
     path: string,
     decode: (value: unknown) => T,
+    init: RequestInit = {},
+  ): Promise<T> {
+    return this.consume(
+      path,
+      async (response) => decode(await response.json()),
+      init,
+    );
+  }
+  private async consume<T>(
+    path: string,
+    decode: (response: Response) => Promise<T>,
     init: RequestInit = {},
   ): Promise<T> {
     const session = this.scope.signal,
@@ -76,8 +91,7 @@ export class AdminApiClient {
         throw new ApiFailure(response.status, code);
       }
       try {
-        const value: unknown = await response.json();
-        return decode(value);
+        return await decode(response);
       } catch {
         throw new ApiFailure(
           request.signal.aborted ? 0 : response.status,
@@ -165,12 +179,78 @@ export class AdminApiClient {
   audit(): Promise<AuditEvent[]> {
     return this.request("/api/audit", (value) => this.contracts.audit(value));
   }
+  downloadExport(
+    locale: "ar" | "en",
+    search: string,
+    role: string,
+    status: string,
+    format: UserExportFormat,
+    sort: "name" | "created_at",
+  ): Promise<ExportDownload> {
+    const params = new URLSearchParams({
+      locale,
+      search,
+      role,
+      status,
+      format,
+      sort,
+    });
+    return this.consume(`/api/users/export?${params}`, async (response) => {
+      const contentType =
+        format === "csv"
+          ? "text/csv; charset=utf-8"
+          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      const filename =
+        format === "csv" ? "summit-users.csv" : "summit-users.xlsx";
+      if (
+        response.headers.get("content-type") !== contentType ||
+        response.headers.get("content-disposition") !==
+          `attachment; filename="${filename}"`
+      ) {
+        await response.body?.cancel();
+        throw new TypeError("Invalid download response");
+      }
+      const reader = response.body?.getReader();
+      if (!reader) throw new TypeError("Missing download body");
+      const chunks: Uint8Array[] = [];
+      let length = 0;
+      try {
+        for (;;) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          length += chunk.value.byteLength;
+          if (length > 32_000_000) {
+            await reader.cancel();
+            throw new RangeError("Download too large");
+          }
+          chunks.push(chunk.value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      const signature = format === "csv" ? [239, 187, 191] : [80, 75, 3, 4];
+      if (!signature.every((value, index) => bytes[index] === value))
+        throw new TypeError("Invalid download signature");
+      return { bytes: bytes.buffer, filename, contentType };
+    });
+  }
   exportUrl(
     locale: "ar" | "en",
     search: string,
     role: string,
     status: string,
+    format: UserExportFormat = "csv",
+    sort: "name" | "created_at" = "created_at",
   ): string {
-    return `${this.base}/api/users/export?${new URLSearchParams({ locale, search, role, status })}`;
+    const params = new URLSearchParams({ locale, search, role, status });
+    if (format !== "csv") params.set("format", format);
+    if (sort !== "created_at") params.set("sort", sort);
+    return `${this.base}/api/users/export?${params}`;
   }
 }

@@ -11,6 +11,9 @@ importers:
         specifier: 8.23.1
         version: 8.23.1
     devDependencies:
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       '@playwright/test':
         specifier: 1.64.1
         version: 1.64.1
@@ -128,7 +131,14 @@ importers:
       '@fontsource/noto-sans-arabic':
         specifier: 5.2.8
         version: 5.2.8
-  packages/exports: {}
+  packages/exports:
+    dependencies:
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
+      '@summit/localization':
+        specifier: workspace:*
+        version: link:../localization
   packages/localization: {}
   packages/observability: {}
   packages/security: {}
@@ -153,6 +163,9 @@ importers:
         version: 19.3.1(react@19.3.1)
 
 packages:
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   '@axe-core/playwright@4.14.0':
     resolution:
@@ -892,6 +905,8 @@ packages:
     engines: {node: '>=0.4'}
 
 snapshots:
+
+  fflate@0.8.3: {}
 
   '@axe-core/playwright@4.14.0(playwright-core@1.64.1)':
     dependencies:

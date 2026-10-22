@@ -12,7 +12,11 @@ import { WorkspaceStore } from "./state.js";
 import type { WorkspaceState } from "./state.js";
 import { WorkspaceController } from "./controller.js";
 import { DraftPresenter } from "./draft-presenter.js";
-import { BrowserNavigation, BrowserPreferences } from "./browser-adapters.js";
+import {
+  BrowserNavigation,
+  BrowserPreferences,
+  BrowserDownloads,
+} from "./browser-adapters.js";
 import { TablePreferenceController } from "./table-preferences.js";
 import { BulkUserController } from "./bulk-users.js";
 export class WorkspaceCompositionRoot {
@@ -38,6 +42,7 @@ export class WorkspaceCompositionRoot {
       new AuthorizationPolicy(),
       new TablePreferenceController(store, api, drafts),
       new BulkUserController(store, api, drafts, new AuthorizationPolicy()),
+      new BrowserDownloads(),
     );
   }
 }

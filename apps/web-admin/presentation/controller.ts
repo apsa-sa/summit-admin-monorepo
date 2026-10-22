@@ -1,4 +1,5 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import type { UserExportFormat } from "../../../packages/contracts/exports.js";
 import { WorkspaceMessages } from "@summit/localization";
 import type { Locale } from "@summit/localization";
 import type { Theme } from "@summit/design-tokens";
@@ -16,6 +17,7 @@ import { WorkspaceStore } from "./state.js";
 import type { ViewName } from "./state.js";
 import type {
   WorkspaceApi,
+  FileDownloadPort,
   WorkspaceNavigation,
   WorkspacePreferenceWriter,
 } from "./ports.js";
@@ -32,6 +34,7 @@ export class WorkspaceController {
     private readonly policy: AuthorizationPolicy,
     readonly table: TablePreferenceController,
     readonly bulk: BulkUserController,
+    private readonly downloads: FileDownloadPort,
   ) {}
   can(action: string, resource?: User, input?: UserInput): boolean {
     const actor = this.store.snapshot.user;
@@ -63,6 +66,7 @@ export class WorkspaceController {
     this.store.patch({ message: this.message(error), error: true });
   }
   private invalidate(): void {
+    this.downloads.dispose();
     this.bulk.stop();
     this.store.advanceEpoch();
     this.sequence++;
@@ -338,10 +342,51 @@ export class WorkspaceController {
     });
     this.drafts.changed();
   }
-  exportUrl(): string {
+  async download(format: UserExportFormat): Promise<void> {
+    const s = this.store.snapshot;
+    if (s.exportBusy || !s.user || !this.can("users:export")) return;
+    const generation = this.store.epoch,
+      q = s.query;
+    this.store.patch({ exportBusy: true, exportMessage: "", exportError: false });
+    try {
+      const file = await this.api.downloadExport(
+        s.locale,
+        q.search,
+        q.role,
+        q.status,
+        format,
+        q.sort,
+      );
+      if (generation === this.store.epoch) {
+        this.downloads.save(file);
+        this.store.patch({
+          exportMessage: new WorkspaceMessages(this.store.snapshot.locale).t(
+            "downloadStarted",
+          ),
+          exportError: false,
+        });
+      }
+    } catch (error: unknown) {
+      if (generation === this.store.epoch) {
+        if (error instanceof ApiFailure && error.status === 401) this.failure(error);
+        else this.store.patch({ exportMessage: this.message(error), exportError: true });
+      }
+    } finally {
+      if (generation === this.store.epoch)
+        this.store.patch({ exportBusy: false });
+    }
+  }
+  exportUrl(format: UserExportFormat = "csv"): string {
     const s = this.store.snapshot,
       q = s.query;
-    return this.api.exportUrl(s.locale, q.search, q.role, q.status);
+    return this.api.exportUrl(
+      s.locale,
+      q.search,
+      q.role,
+      q.status,
+      format,
+      q.sort,
+    );
   }
   href(view: ViewName): string {
     return this.navigation.url(view, this.store.snapshot.query);

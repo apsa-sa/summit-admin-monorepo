@@ -18,6 +18,9 @@ export interface WorkspaceState {
   readonly theme: Theme;
   readonly user: User | null;
   readonly busy: boolean;
+  readonly exportBusy: boolean;
+  readonly exportMessage: string;
+  readonly exportError: boolean;
   readonly loading: boolean;
   readonly booting: boolean;
   readonly message: string;
@@ -66,6 +69,9 @@ export class WorkspaceStore {
       theme,
       user,
       busy: false,
+      exportBusy: false,
+      exportMessage: "",
+      exportError: false,
       loading: false,
       booting: true,
       message: "",
@@ -106,6 +112,9 @@ export class WorkspaceStore {
     this.patch({
       user: null,
       busy: false,
+      exportBusy: false,
+      exportMessage: "",
+      exportError: false,
       booting: false,
       logoutFailed: false,
       bulk: new BulkStateModel().defaults(),

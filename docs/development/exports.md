@@ -1,8 +1,8 @@
 <!-- © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT -->
 # CSV export contract / عقد التصدير
 
-The current implemented exporter is CSV. Excel and PDF remain unimplemented in
-the verified feature branches; do not advertise buttons or API formats for them.
+CSV and actual XLSX are implemented. PDF remains a separate unimplemented format
+at this checkpoint; no PDF control is advertised.
 
 Authenticate to the installation, then use the same-origin session cookie:
 
@@ -42,6 +42,37 @@ filtered export link. Custom consumers should validate response status/MIME befo
 saving bytes. Add new formats behind an explicit typed exporter contract and
 retain all existing response/security/consumer regression tests.
 
-العربية: CSV هو التصدير المنفذ حالياً. تُراجع الصلاحية على الخادم، ويشمل التصدير
-النتائج المصفاة بحد 10 آلاف سجل. الأخطاء JSON بلا ترويسة تنزيل؛ Excel وPDF وقياس
+العربية: يوضح القسم الأول عقد CSV المتوافق مع التطبيق السابق. تُراجع الصلاحية على الخادم، ويشمل التصدير
+النتائج المصفاة بحد 10 آلاف سجل. الأخطاء JSON بلا ترويسة تنزيل؛ PDF وقياس
 الأداء على 100 ألف سجل أعمال متبقية، ولا تُعرض على أنها مكتملة.
+
+## Excel / XLSX
+
+Use `GET /api/users/export?format=xlsx&locale=ar` with the same scope parameters.
+The exact MIME is `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+and the filename is `summit-users.xlsx`. This is an OOXML ZIP workbook, not renamed
+CSV. Four text columns have localized headers and role/status values, Arabic RTL
+sheet view, fixed header row and filter. Every value is an inline string: a user
+value beginning with `=`, `+`, `-` or `@` cannot become a spreadsheet formula.
+No macros, external relationships or hyperlinks are emitted. Invalid Unicode
+is rejected; control/literal-escape handling follows SpreadsheetML string rules.
+The same 10,000-record database export cap and server `users:export` permission
+apply. Unsupported formats/locales return 422; a custom composition missing its
+binary provider returns 503 `export_unavailable`. Neither error is an attachment.
+
+The reference class UI controls both downloads: HTTP/MIME/filename/signature and
+32 MB read bound are checked before saving. It keeps filters and edits in place
+on failure, displays progress/errors, prevents duplicate active downloads and
+allows an explicit retry. Ending the session cancels transport; late prior-account
+responses cannot save a file. The browser adapter owns/revokes its temporary URLs.
+Real hrefs remain as fallback; full no-JavaScript admin operation is not claimed.
+
+`BinaryUserExporter` in `packages/contracts/exports.ts` is the provider port;
+register class providers in `AdminCompositionRoot`. Runtime ZIP dependency
+fflate is pinned at 0.8.3 (MIT, zero runtime dependencies). Its notice and the
+compatibility decision are in `THIRD_PARTY_NOTICES.md` and ADR-0004. No mandatory
+provider account or subscription is required.
+
+العربية: ينشئ Excel ملف XLSX فعلياً بالنطاق والصلاحية نفسيهما، مع خلايا نصية
+واتجاه عربي وعناوين مترجمة. لا يُحوّل المدخلات إلى صيغ، ولا يخرج المستخدم من
+الواجهة عند فشل التنزيل. PDF ما زال مرحلة مستقلة تالية في هذه النقطة.

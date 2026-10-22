@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test";
 import { randomUUID, createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
+import { WorkbookInspector } from "./workbook-inspector.js";
 import AxeBuilder from "@axe-core/playwright";
 import { JourneyFixture } from "./journey-fixture.js";
 import { DatabaseFixture } from "../support/database-fixture.js";
@@ -246,11 +247,62 @@ class NextAdminBrowserSuite {
           expect(csv).toContain(edited);
           expect(csv).not.toContain("password_hash");
           expect(csv).toContain(locale === "ar" ? "الاسم" : "Name");
-          const failedExport = await page.request.get(`${this.origin}/api/users/export?sort=unsupported`);
+          // A failed binary request must keep the authorized workspace and filters.
+          const exportLocation = page.url();
+          let failExport = true;
+          await page.route(`${this.origin}/api/users/export?**`, async (route) => {
+            if (
+              failExport &&
+              new URL(route.request().url()).searchParams.get("format") === "xlsx"
+            ) {
+              failExport = false;
+              await route.abort("internetdisconnected");
+            } else await route.continue();
+          });
+          await page
+            .getByRole("link", {
+              name: locale === "ar" ? "تصدير Excel المصرّح به" : "Export authorized Excel",
+              exact: true,
+            })
+            .click();
+          await expect(page.locator("#admin-content").getByRole("alert")).toContainText(
+            locale === "ar" ? "تعذر الاتصال" : "Connection failed",
+          );
+          expect(page.url()).toBe(exportLocation);
+          await expect(page.locator("#admin-content").getByRole("cell", { name: edited, exact: true })).toBeVisible();
+          await expect(page.locator("#admin-content")).toBeVisible();
+          const excelDownload = page.waitForEvent("download");
+          await page
+            .getByRole("link", {
+              name:
+                locale === "ar"
+                  ? "تصدير Excel المصرّح به"
+                  : "Export authorized Excel",
+              exact: true,
+            })
+            .click();
+          const workbook = await excelDownload;
+          expect(workbook.suggestedFilename()).toBe("summit-users.xlsx");
+          const workbookPath = await workbook.path();
+          if (!workbookPath) throw new Error("Missing XLSX download");
+          await new WorkbookInspector().inspect(
+            page,
+            await readFile(workbookPath),
+            locale,
+            edited,
+          );
+          const failedExport = await page.request.get(
+            `${this.origin}/api/users/export?sort=unsupported`,
+          );
           expect(failedExport.status()).toBe(422);
-          expect(failedExport.headers()["content-type"]).toMatch(/^application\/json\b/);
+          expect(failedExport.headers()["content-type"]).toMatch(
+            /^application\/json\b/,
+          );
           expect(failedExport.headers()["content-disposition"]).toBeUndefined();
-          expect(await failedExport.json()).toEqual({ error: "invalid_sort", requestId: failedExport.headers()["x-request-id"] });
+          expect(await failedExport.json()).toEqual({
+            error: "invalid_sort",
+            requestId: failedExport.headers()["x-request-id"],
+          });
           expect(
             (
               await new AxeBuilder({ page })
@@ -440,6 +492,14 @@ class NextAdminBrowserSuite {
         page.getByRole("button", { name: "إضافة مستخدم", exact: true }),
       ).toHaveCount(0);
       await expect(page.locator("#admin-bulk-open")).toHaveCount(0);
+      await expect(
+        page.getByRole("link", { name: "تصدير Excel المصرّح به", exact: true }),
+      ).toHaveCount(0);
+      const forbiddenExport = await page.request.get(
+        `${this.origin}/api/users/export?format=xlsx`,
+      );
+      expect(forbiddenExport.status()).toBe(403);
+      expect(forbiddenExport.headers()["content-disposition"]).toBeUndefined();
       await expect(
         page.locator('.admin-users-table input[type="checkbox"]'),
       ).toHaveCount(0);
