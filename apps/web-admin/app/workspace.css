@@ -227,3 +227,29 @@ body {
 .admin-login-form .summit-input {
   min-inline-size: 0;
 }
+
+/* Preserve complete short Arabic labels; only the named table region scrolls on narrow screens. */
+.admin-users-table .summit-table {
+  min-inline-size: 56rem;
+}
+.admin-users-table .summit-table th,
+.admin-table-short {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.admin-table-preferences {
+  margin-block: var(--summit-space-4);
+}
+.admin-table-preferences summary {
+  cursor: pointer;
+  padding-block: var(--summit-space-3);
+}
+.admin-table-preferences fieldset {
+  min-inline-size: 0;
+  border: 1px solid var(--summit-border);
+  margin-block: var(--summit-space-3);
+}
+.summit-table-scroll:focus-visible {
+  outline: 2px solid var(--summit-focus);
+  outline-offset: 2px;
+}

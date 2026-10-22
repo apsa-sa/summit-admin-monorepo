@@ -49,7 +49,13 @@ export class Table<Row> extends Component<TableProps<Row>> {
     if (p.onSelect && !p.selectionLabel)
       throw new TypeError("Selectable rows require accessible labels");
     return (
-      <div className="summit-table-scroll" aria-busy={p.loading || undefined}>
+      <div
+        className="summit-table-scroll"
+        role="region"
+        aria-label={p.caption}
+        tabIndex={0}
+        aria-busy={p.loading || undefined}
+      >
         <table className="summit-table">
           <caption>{p.caption}</caption>
           <thead>

@@ -1,6 +1,11 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import type { Locale } from "./index.js";
 const en = Object.freeze({
+  columns: "Visible columns",
+  savedViewHint: "Save search, filters, sort, page and columns for your account. Direct URLs take priority.",
+  saveView: "Save table view",
+  restoreView: "Reload saved table view",
+  viewSaved: "Table view saved on the server.",
   product: "SUMMIT",
   tagline: "Your workspace. Your installation.",
   signIn: "Sign in",
@@ -87,6 +92,11 @@ const en = Object.freeze({
 });
 export type WorkspaceMessageKey = keyof typeof en;
 const ar: Readonly<Record<WorkspaceMessageKey, string>> = Object.freeze({
+  columns: "الأعمدة الظاهرة",
+  savedViewHint: "احفظ البحث والتصفية والفرز والصفحة والأعمدة لحسابك. للرابط المباشر الأولوية.",
+  saveView: "حفظ عرض الجدول",
+  restoreView: "استعادة عرض الجدول المحفوظ",
+  viewSaved: "حُفظ عرض الجدول في الخادم.",
   product: "قمة",
   tagline: "مساحة عملك. تثبيتك المستقل.",
   signIn: "تسجيل الدخول",

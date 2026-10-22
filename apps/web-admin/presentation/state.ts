@@ -8,6 +8,8 @@ import type {
   AuditEvent,
   UserQuery,
 } from "../../../packages/contracts/index.js";
+import type { UserTablePreferences } from "../../../packages/contracts/table-preferences.js";
+import { TablePreferenceValidation } from "../../../packages/core/table-preferences.js";
 export type ViewName = "overview" | "users" | "drafts" | "audit" | "settings";
 export interface WorkspaceState {
   readonly locale: Locale;
@@ -35,6 +37,11 @@ export interface WorkspaceState {
   readonly mobile: boolean;
   readonly collapsed: boolean;
   readonly logoutFailed: boolean;
+  readonly tablePreferences: UserTablePreferences;
+  readonly tableBusy: boolean;
+  readonly tableReady: boolean;
+  readonly tableMessage: string;
+  readonly tableError: boolean;
 }
 export class WorkspaceStore {
   private value: WorkspaceState;
@@ -77,6 +84,11 @@ export class WorkspaceStore {
       mobile: false,
       collapsed: false,
       logoutFailed: false,
+      tablePreferences: new TablePreferenceValidation().defaults(),
+      tableBusy: false,
+      tableReady: false,
+      tableMessage: "",
+      tableError: false,
     };
   }
   get snapshot(): WorkspaceState {
@@ -92,6 +104,11 @@ export class WorkspaceStore {
       busy: false,
       booting: false,
       logoutFailed: false,
+      tablePreferences: new TablePreferenceValidation().defaults(),
+      tableBusy: false,
+      tableReady: false,
+      tableMessage: "",
+      tableError: false,
       page: null,
       audit: [],
       editing: undefined,

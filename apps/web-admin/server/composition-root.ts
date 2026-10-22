@@ -16,6 +16,10 @@ import { NodeAdminServer } from './node-server.js';
 import { SessionCookie } from './session-cookie.js';
 import { JsonBody } from './json-body.js';
 import { PublicAssets } from './assets.js';
+import { TablePreferenceService } from '../../../packages/application/table-preferences.js';
+import { TablePreferenceValidation } from '../../../packages/core/table-preferences.js';
+import { PostgresTablePreferenceRepository } from '../../../packages/data-access/table-preference-repository.js';
+import { PostgresSessionGuard } from '../../../packages/data-access/session-guard.js';
 export class AdminCompositionRoot {
   readonly repository:PostgresRepository;
   readonly controller:AdminHttpController;
@@ -30,7 +34,8 @@ export class AdminCompositionRoot {
       new AuthenticationService(this.repository.identities,sessions,new PasswordHasher(),tokens,attempts === 'database' ? new PostgresRateLimiter(this.repository.pool) : new RateLimiter()),
       new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter()),
       new DraftApplicationService(this.repository.drafts,policy),new AuditApplicationService(this.repository.audit,sessions,policy),
-      this.repository,new SessionCookie(tokens,parsed.protocol==='https:'),body,logger,origin);
+      this.repository,new SessionCookie(tokens,parsed.protocol==='https:'),body,logger,origin,
+      new TablePreferenceService(new PostgresTablePreferenceRepository(this.repository.pool,new PostgresSessionGuard(),new TablePreferenceValidation()),policy,new TablePreferenceValidation()));
     this.server=new NodeAdminServer(this.controller,new PublicAssets(),body,logger,origin);
   }
   async close():Promise<void>{await this.repository.pool.end();}

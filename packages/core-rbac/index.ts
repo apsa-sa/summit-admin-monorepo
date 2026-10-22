@@ -4,7 +4,7 @@ import type { Actor, User, UserInput } from '../contracts/index.js';
 import { DomainError } from '../core/index.js';
 export class AuthorizationPolicy {
   require(actor: Actor, action: string, resource?: User, input?: UserInput): void {
-    const grants: Record<string, readonly string[]> = {admin:['users:read','users:create','users:update','users:delete','users:export','audit:read','draft:write'],editor:['users:read','users:update','users:export','draft:write'],viewer:['users:read','draft:write']};
+    const grants: Record<string, readonly string[]> = {admin:['users:read','users:create','users:update','users:delete','users:export','audit:read','draft:write','preferences:write'],editor:['users:read','users:update','users:export','draft:write','preferences:write'],viewer:['users:read','draft:write','preferences:write']};
     if (!grants[actor.role]?.includes(action)) throw new DomainError(403,'forbidden');
     if (action === 'users:update' && resource && input) {
       if (actor.id === resource.id && (input.role !== resource.role || input.status !== resource.status)) throw new DomainError(403,'self_privilege_change');

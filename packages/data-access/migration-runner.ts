@@ -7,6 +7,7 @@ export class MigrationRunner {
   private readonly names = Object.freeze([
     "001_initial.sql",
     "002_login_attempts.sql",
+    "003_table_preferences.sql",
   ]);
   async apply(pool: Pool): Promise<void> {
     const migrations = await Promise.all(

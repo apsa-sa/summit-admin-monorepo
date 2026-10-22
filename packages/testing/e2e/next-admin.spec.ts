@@ -9,6 +9,7 @@ import { JourneyFixture } from "./journey-fixture.js";
 import { DatabaseFixture } from "../support/database-fixture.js";
 import { CreatedUserCleanup } from "./created-user-cleanup.js";
 import { ResponseContracts } from "../../contracts/decoders.js";
+import { TablePreferenceValidation } from "../../core/table-preferences.js";
 class NextAdminBrowserSuite {
   private readonly origin = "http://127.0.0.1:3212";
   private readonly fixture = new JourneyFixture();
@@ -150,6 +151,83 @@ class NextAdminBrowserSuite {
           await expect(page.locator("#admin-user-drawer")).not.toBeVisible();
           await expect(row).toContainText(edited);
           await expect(row.locator("script")).toHaveCount(0);
+          // Save a real per-account view, hydrate it without explicit query controls,
+          // then prove direct URLs win and explicit reload restores confirmed state.
+          const preferences = page.locator(".admin-table-preferences");
+          await preferences.locator("summary").click();
+          await page.locator("#admin-column-email").uncheck();
+          await expect(
+            page.getByRole("columnheader", {
+              name: locale === "ar" ? "البريد الإلكتروني" : "Email",
+              exact: true,
+            }),
+          ).toHaveCount(0);
+          await page.locator("#admin-save-view").click();
+          await expect(page.locator("#admin-view-status")).toHaveText(
+            locale === "ar"
+              ? "حُفظ عرض الجدول في الخادم."
+              : "Table view saved on the server.",
+          );
+          await page.goto(`${this.origin}/?view=users`);
+          await expect(page.locator("#admin-search")).toHaveValue(name);
+          await expect(row).toContainText(edited);
+          await expect(
+            page.getByRole("columnheader", {
+              name: locale === "ar" ? "البريد الإلكتروني" : "Email",
+              exact: true,
+            }),
+          ).toHaveCount(0);
+          const direct = `No results ${randomUUID()}`;
+          await page.goto(
+            `${this.origin}/?${new URLSearchParams({ view: "users", search: direct, page: "1", sort: "name" })}`,
+          );
+          await expect(page.locator("#admin-search")).toHaveValue(direct);
+          await expect(row).toHaveCount(0);
+          await preferences.locator("summary").click();
+          await page.locator("#admin-restore-view").click();
+          await expect(page.locator("#admin-search")).toHaveValue(name);
+          await expect(row).toContainText(edited);
+          await page.locator("#admin-column-email").check();
+          await page.locator("#admin-save-view").click();
+          await expect(page.locator("#admin-view-status")).toHaveText(
+            locale === "ar"
+              ? "حُفظ عرض الجدول في الخادم."
+              : "Table view saved on the server.",
+          );
+          expect(
+            await page.locator(".admin-table-short").evaluateAll((nodes) =>
+              nodes.every((node) => {
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                return range.getClientRects().length === 1;
+              }),
+            ),
+          ).toBe(true);
+          await page.setViewportSize({ width: 360, height: 800 });
+          await page.evaluate(() => {
+            document.documentElement.style.fontSize = "200%";
+          });
+          const scroll = page.locator('.admin-users-table [role="region"]');
+          await scroll.focus();
+          await expect(scroll).toBeFocused();
+          expect(
+            await scroll.evaluate(
+              (node) => node.scrollWidth > node.clientWidth,
+            ),
+          ).toBe(true);
+          expect(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth,
+            ),
+          ).toBe(true);
+          await page.screenshot({
+            path: `test-results/admin-table-mobile-${locale}-${theme}.png`,
+            fullPage: true,
+          });
+          await page.evaluate(() => {
+            document.documentElement.style.removeProperty("font-size");
+          });
+          await page.setViewportSize({ width: 1280, height: 800 });
           const downloadPromise = page.waitForEvent("download");
           await page
             .getByRole("link", {
@@ -280,6 +358,50 @@ class NextAdminBrowserSuite {
           .locator(".admin-sidebar nav")
           .getByRole("link", { name: "سجل التدقيق", exact: true }),
       ).toHaveCount(0);
+      await page.locator(".admin-table-preferences summary").click();
+      await expect(page.locator("#admin-save-view")).toBeEnabled();
+      const preferenceResponse = await page.request.get(
+        `${this.origin}/api/preferences/users`,
+      );
+      expect(preferenceResponse.status()).toBe(200);
+      const own = new TablePreferenceValidation().parse(
+        await preferenceResponse.json(),
+      );
+      expect(own.query.search).toBe("");
+      expect(own.version).toBe(0);
+      expect(
+        (
+          await page.request.put(`${this.origin}/api/preferences/users`, {
+            headers: { origin: this.origin },
+            data: { ...own, userId: this.fixture.account("admin").id },
+          })
+        ).status(),
+      ).toBe(422);
+      expect(
+        (
+          await page.request.put(`${this.origin}/api/preferences/users`, {
+            headers: { origin: "https://untrusted.example" },
+            data: own,
+          })
+        ).status(),
+      ).toBe(403);
+      expect(
+        (
+          await page.request.put(`${this.origin}/api/preferences/users`, {
+            headers: { origin: this.origin },
+            data: { ...own, columns: ["name"] },
+          })
+        ).status(),
+      ).toBe(200);
+      await page.locator("#admin-save-view").click();
+      await expect(page.locator("#admin-view-status")).toHaveText(
+        "تغيّر السجل. استعد النسخة المؤكدة قبل التعديل.",
+      );
+      await expect(page.locator("#admin-save-view")).toBeDisabled();
+      await expect(page.locator("#admin-column-email")).toBeChecked();
+      await page.locator("#admin-restore-view").click();
+      await expect(page.locator("#admin-column-email")).not.toBeChecked();
+      await expect(page.locator("#admin-save-view")).toBeEnabled();
       await page.keyboard.press("Control+k");
       await expect(page.locator("#admin-command-palette")).toBeVisible();
       await expect(

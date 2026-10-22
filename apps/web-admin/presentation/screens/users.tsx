@@ -12,6 +12,7 @@ import {
 import type { TableColumn } from "@summit/ui";
 import type { User } from "../../../../packages/contracts/index.js";
 import { WorkspaceScreen } from "./screen.js";
+import { TablePreferencesPanel } from "./table-preferences.js";
 export class UsersScreen extends WorkspaceScreen {
   override render(): ReactNode {
     const { state: s, controller: c } = this.props,
@@ -29,8 +30,20 @@ export class UsersScreen extends WorkspaceScreen {
         label: m.t("email"),
         cell: (user) => <bdi>{user.email}</bdi>,
       },
-      { id: "role", label: m.t("role"), cell: (user) => m.t(user.role) },
-      { id: "status", label: m.t("status"), cell: (user) => m.t(user.status) },
+      {
+        id: "role",
+        label: m.t("role"),
+        cell: (user) => (
+          <span className="admin-table-short">{m.t(user.role)}</span>
+        ),
+      },
+      {
+        id: "status",
+        label: m.t("status"),
+        cell: (user) => (
+          <span className="admin-table-short">{m.t(user.status)}</span>
+        ),
+      },
       {
         id: "created_at",
         label: m.t("createdAt"),
@@ -135,28 +148,42 @@ export class UsersScreen extends WorkspaceScreen {
             {m.t("search")}
           </Button>
         </form>
-        <Table<User>
-          caption={m.t("users")}
-          rows={s.page?.rows ?? []}
-          columns={columns}
-          rowKey={(user) => user.id}
-          loading={s.loading}
-          loadingLabel={m.t("loading")}
-          emptyLabel={m.t("noResults")}
-          retryLabel={m.t("retry")}
-          {...(s.error ? { error: s.message } : {})}
-          onRetry={() => {
-            void c.load();
-          }}
-          sort={{
-            column: s.query.sort,
-            direction: s.query.sort === "name" ? "asc" : "desc",
-          }}
-          onSort={(column) => {
-            if (column === "name" || column === "created_at")
-              c.queryChanged({ sort: column, page: 1 }, true);
-          }}
-        />
+        <TablePreferencesPanel {...this.props} />
+        <div className="admin-users-table">
+          <Table<User>
+            caption={m.t("users")}
+            rows={s.page?.rows ?? []}
+            columns={columns.filter(
+              (column) =>
+                column.id === "actions" ||
+                s.tablePreferences.columns.some((id) => id === column.id),
+            )}
+            rowKey={(user) => user.id}
+            loading={s.loading}
+            loadingLabel={m.t("loading")}
+            emptyLabel={m.t("noResults")}
+            retryLabel={m.t("retry")}
+            {...(s.error ? { error: s.message } : {})}
+            onRetry={() => {
+              void c.load();
+            }}
+            {...(s.tablePreferences.columns.includes(s.query.sort)
+              ? {
+                  sort: {
+                    column: s.query.sort,
+                    direction:
+                      s.query.sort === "name"
+                        ? ("asc" as const)
+                        : ("desc" as const),
+                  },
+                }
+              : {})}
+            onSort={(column) => {
+              if (column === "name" || column === "created_at")
+                c.queryChanged({ sort: column, page: 1 }, true);
+            }}
+          />
+        </div>
         {s.query.page <= maximum ? (
           <Pagination
             page={s.query.page}

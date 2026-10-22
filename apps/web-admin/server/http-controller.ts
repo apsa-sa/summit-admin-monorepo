@@ -9,11 +9,12 @@ import { AuditApplicationService } from '../../../packages/application/audit.js'
 import { SafeLogger } from '../../../packages/observability/index.js';
 import { SessionCookie } from './session-cookie.js';
 import { JsonBody } from './json-body.js';
+import type { TablePreferenceService } from '../../../packages/application/table-preferences.js';
 export class AdminHttpController {
   constructor(private readonly auth:AuthenticationService,private readonly users:UserApplicationService,
     private readonly drafts:DraftApplicationService,private readonly audit:AuditApplicationService,
     private readonly health:HealthStore,private readonly cookie:SessionCookie,private readonly body:JsonBody,
-    private readonly logger:SafeLogger,private readonly origin:string) {}
+    private readonly logger:SafeLogger,private readonly origin:string,private readonly tablePreferences:TablePreferenceService) {}
   private json(value:unknown,headers:Headers,status=200):Response {return Response.json(value,{status,headers});}
   async handle(request:Request,peer:string):Promise<Response> {
     const requestId=randomUUID(); const headers=new Headers({'X-Request-Id':requestId,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
@@ -37,6 +38,11 @@ export class AdminHttpController {
       // Authenticate unknown protected routes too; unauthenticated requests reveal no route details.
       await this.auth.authenticate(digest);
       if(pathname==='/api/me'&&method==='GET')return this.json({user:await this.auth.me(digest)},headers);
+      if(pathname==='/api/preferences/users'){
+        if(method==='GET')return this.json(await this.tablePreferences.load(digest),headers);
+        if(method==='PUT')return this.json(await this.tablePreferences.save(digest,await this.body.parse(request)),headers);
+        throw new DomainError(405,'method_not_allowed');
+      }
       if(pathname==='/api/draft'){
         if(method==='GET')return this.json(await this.drafts.load(digest),headers);
         if(method==='PUT')return this.json(await this.drafts.save(digest,await this.body.parse(request)),headers);

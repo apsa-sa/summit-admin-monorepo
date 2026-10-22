@@ -17,7 +17,7 @@ export class BrowserPreferences {
   }
 }
 export class BrowserNavigation {
-  read(): { view: ViewName; query: UserQuery } {
+  read(fallback?: UserQuery): { view: ViewName; query: UserQuery } {
     const params = new URLSearchParams(location.search);
     const value = params.get("view");
     const view: ViewName =
@@ -27,7 +27,20 @@ export class BrowserNavigation {
       value === "settings"
         ? value
         : "overview";
-    return { view, query: Validation.query(params) };
+    const saved = fallback
+      ? new URLSearchParams({
+          search: fallback.search,
+          role: fallback.role,
+          status: fallback.status,
+          page: String(fallback.page),
+          sort: fallback.sort,
+        })
+      : new URLSearchParams();
+    // A direct URL is an explicit view; saved state applies only without query controls.
+    const explicit = ["search", "role", "status", "page", "sort"].some((key) =>
+      params.has(key),
+    );
+    return { view, query: Validation.query(explicit ? params : saved) };
   }
   url(view: ViewName, query: UserQuery): string {
     return `/?${new URLSearchParams({ view, search: query.search, role: query.role, status: query.status, page: String(query.page), sort: query.sort })}`;

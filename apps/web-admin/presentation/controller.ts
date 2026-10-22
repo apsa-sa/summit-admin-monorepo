@@ -11,6 +11,7 @@ import { Validation } from "../../../packages/core/index.js";
 import { AuthorizationPolicy } from "../../../packages/core-rbac/index.js";
 import { ApiFailure } from "../browser/api.js";
 import { DraftAutosaveController } from "../browser/draft-controller.js";
+import type { TablePreferenceController } from "./table-preferences.js";
 import { WorkspaceStore } from "./state.js";
 import type { ViewName } from "./state.js";
 import type {
@@ -28,6 +29,7 @@ export class WorkspaceController {
     private readonly navigation: WorkspaceNavigation,
     private readonly preferences: WorkspacePreferenceWriter,
     private readonly policy: AuthorizationPolicy,
+    readonly table: TablePreferenceController,
   ) {}
   can(action: string, resource?: User, input?: UserInput): boolean {
     const actor = this.store.snapshot.user;
@@ -113,7 +115,7 @@ export class WorkspaceController {
   }
   private readLocation(): void {
     try {
-      const value = this.navigation.read();
+      const value = this.navigation.read(this.store.snapshot.query);
       this.store.patch({
         ...value,
         view: this.destinations().includes(value.view)
@@ -153,8 +155,17 @@ export class WorkspaceController {
   private async enter(user: User): Promise<void> {
     this.store.patch({ user, logoutFailed: false, booting: false });
     this.drafts.activate(user.id);
+    const epoch = this.store.epoch;
+    await this.table.load();
+    if (epoch !== this.store.epoch) return;
     this.readLocation();
     await this.load();
+  }
+  async restoreTable(): Promise<void> {
+    if (await this.table.load()) {
+      this.navigation.write("users", this.store.snapshot.query, true);
+      await this.load();
+    }
   }
   async login(email: string, password: string): Promise<void> {
     if (this.store.snapshot.busy) return;
@@ -201,6 +212,7 @@ export class WorkspaceController {
     if (!s.user) return;
     const generation = this.store.epoch,
       sequence = ++this.sequence;
+    this.store.patch({ loading: false });
     if (s.view === "drafts") {
       await this.drafts.load();
       return;

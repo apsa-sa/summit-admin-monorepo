@@ -10,7 +10,14 @@ import type {
 } from "../../../packages/contracts/index.js";
 import type { DraftApi } from "../browser/draft-controller.js";
 import type { ViewName } from "./state.js";
-export interface WorkspaceApi extends DraftApi {
+import type { UserTablePreferences } from "../../../packages/contracts/table-preferences.js";
+export interface TablePreferenceApi {
+  tablePreferences(): Promise<UserTablePreferences>;
+  saveTablePreferences(
+    value: UserTablePreferences,
+  ): Promise<UserTablePreferences>;
+}
+export interface WorkspaceApi extends DraftApi, TablePreferenceApi {
   endSession(): void;
   me(): Promise<User>;
   login(email: string, password: string): Promise<User>;
@@ -34,7 +41,7 @@ export interface WorkspaceApi extends DraftApi {
   ): string;
 }
 export interface WorkspaceNavigation {
-  read(): { view: ViewName; query: UserQuery };
+  read(fallback?: UserQuery): { view: ViewName; query: UserQuery };
   url(view: ViewName, query: UserQuery): string;
   write(view: ViewName, query: UserQuery, replace?: boolean): void;
 }

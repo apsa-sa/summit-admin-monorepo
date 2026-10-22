@@ -13,6 +13,7 @@ import type { WorkspaceState } from "./state.js";
 import { WorkspaceController } from "./controller.js";
 import { DraftPresenter } from "./draft-presenter.js";
 import { BrowserNavigation, BrowserPreferences } from "./browser-adapters.js";
+import { TablePreferenceController } from "./table-preferences.js";
 export class WorkspaceCompositionRoot {
   create(
     locale: Locale,
@@ -34,6 +35,7 @@ export class WorkspaceCompositionRoot {
       new BrowserNavigation(),
       new BrowserPreferences(),
       new AuthorizationPolicy(),
+      new TablePreferenceController(store, api, drafts),
     );
   }
 }
