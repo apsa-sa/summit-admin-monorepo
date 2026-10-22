@@ -170,3 +170,8 @@ apps/web-admin/public/localization.js
 .pgpass
 credentials.json
 service-account.json
+
+# Next.js proof and verification outputs
+apps/next-proof/next-env.d.ts
+test-results/
+playwright-report/

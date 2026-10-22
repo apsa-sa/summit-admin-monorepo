@@ -5,6 +5,8 @@ export type TranslationKey = keyof typeof Localizer.ar;
 
 export class Localizer {
   static readonly ar = {
+    confirmReload:'سيتم استبدال التعديلات غير المحفوظة بالنسخة المحفوظة في الخادم. هل تتابع؟',
+    reloadDraft:'استعادة نسخة الخادم', invalid_response:'استجابة الخادم غير صالحة. أعد المحاولة.', invalid_password:'كلمة المرور غير صالحة.',
     product:'قمة', subtitle:'مساحة إدارة متكاملة', workspace:'مساحة العمل', dashboard:'نظرة عامة',
     users:'المستخدمون', drafts:'المسودات', audit:'سجل التدقيق', signIn:'تسجيل الدخول',
     email:'البريد الإلكتروني', password:'كلمة المرور', signOut:'تسجيل الخروج',
@@ -32,6 +34,8 @@ export class Localizer {
     application:'تطبيق تجريبي محلي غير معتمد للإنتاج', newUser:'مستخدم جديد',
   } as const;
   static readonly en: Record<TranslationKey,string> = {
+    confirmReload:'Replace unsaved changes with the saved server copy?',
+    reloadDraft:'Reload server copy', invalid_response:'The server response is invalid. Please retry.', invalid_password:'Invalid password.',
     product:'SUMMIT', subtitle:'Enterprise administration workspace', workspace:'Workspace', dashboard:'Overview',
     users:'Users', drafts:'Drafts', audit:'Audit log', signIn:'Sign in',
     email:'Email address', password:'Password', signOut:'Sign out',
