@@ -41,6 +41,10 @@ export class WorkspaceController {
       return false;
     }
   }
+  availableActions(): readonly string[] {
+    const actor = this.store.snapshot.user;
+    return actor ? this.policy.actionsFor(actor) : [];
+  }
   destinations(): ViewName[] {
     return this.can("audit:read")
       ? ["overview", "users", "drafts", "audit", "settings"]
@@ -256,10 +260,14 @@ export class WorkspaceController {
     this.store.patch({ busy: true, formError: "" });
     try {
       const input = Validation.user(value);
-      if (id) await this.api.updateUser(id, input);
-      else await this.api.createUser(input);
+      const saved = id
+        ? await this.api.updateUser(id, input)
+        : await this.api.createUser(input);
       if (generation === this.store.epoch) {
-        this.store.patch({ editing: undefined });
+        this.store.patch({
+          editing: undefined,
+          ...(saved.id === this.store.snapshot.user?.id ? { user: saved } : {}),
+        });
         await this.load();
         if (generation === this.store.epoch)
           this.store.patch({

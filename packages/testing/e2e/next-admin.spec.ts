@@ -325,6 +325,60 @@ class NextAdminBrowserSuite {
                 event.resourceId === created.id,
             ),
           ).toBe(true);
+          await nav
+            .getByRole("link", {
+              name: locale === "ar" ? "التفضيلات" : "Preferences",
+              exact: true,
+            })
+            .click();
+          await expect(
+            page.locator(
+              '#admin-account-permissions [data-permission="users:delete"]',
+            ),
+          ).toHaveCount(1);
+          await page
+            .getByRole("button", {
+              name:
+                locale === "ar"
+                  ? "تعديل بيانات الحساب"
+                  : "Edit account profile",
+              exact: true,
+            })
+            .click();
+          await expect(page.locator("#admin-user-role")).toBeDisabled();
+          await expect(page.locator("#admin-user-status")).toBeDisabled();
+          const accountName = `Synthetic ${locale} ${theme}`;
+          await page.locator("#admin-user-name").fill(accountName);
+          await page
+            .locator("#admin-user-drawer")
+            .getByRole("button", {
+              name: locale === "ar" ? "حفظ" : "Save",
+              exact: true,
+            })
+            .click();
+          await expect(page.locator("#admin-user-drawer")).not.toBeVisible();
+          await expect(page.locator("#admin-account-name")).toHaveText(
+            accountName,
+          );
+          await page.reload();
+          await expect(page.locator("#admin-account-name")).toHaveText(
+            accountName,
+          );
+          expect(
+            (await page.request.get(`${this.origin}/api/me`)).status(),
+          ).toBe(200);
+          expect(
+            (
+              await new AxeBuilder({ page })
+                .include("#admin-content")
+                .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+                .analyze()
+            ).violations,
+          ).toEqual([]);
+          await page.screenshot({
+            path: `test-results/admin-account-${locale}-${theme}.png`,
+            fullPage: true,
+          });
           await page
             .getByRole("button", {
               name: locale === "ar" ? "تسجيل الخروج" : "Sign out",
@@ -402,6 +456,21 @@ class NextAdminBrowserSuite {
       await page.locator("#admin-restore-view").click();
       await expect(page.locator("#admin-column-email")).not.toBeChecked();
       await expect(page.locator("#admin-save-view")).toBeEnabled();
+      await page
+        .locator(".admin-sidebar nav")
+        .getByRole("link", { name: "التفضيلات", exact: true })
+        .click();
+      await expect(
+        page.locator("#admin-account-permissions [data-permission]"),
+      ).toHaveCount(3);
+      await expect(
+        page.locator(
+          '#admin-account-permissions [data-permission="users:update"]',
+        ),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "تعديل بيانات الحساب", exact: true }),
+      ).toHaveCount(0);
       await page.keyboard.press("Control+k");
       await expect(page.locator("#admin-command-palette")).toBeVisible();
       await expect(

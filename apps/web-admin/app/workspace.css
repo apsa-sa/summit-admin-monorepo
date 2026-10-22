@@ -253,3 +253,21 @@ body {
   outline: 2px solid var(--summit-focus);
   outline-offset: 2px;
 }
+
+.admin-account-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--summit-space-3);
+}
+.admin-account-details dt {
+  font-weight: 600;
+}
+.admin-account-details dd {
+  margin-inline-start: 0;
+  min-inline-size: 0;
+}
+@media (max-width: 420px) {
+  .admin-account-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

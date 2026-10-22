@@ -28,7 +28,7 @@ class FakeWorkspaceApi implements WorkspaceApi {
   async logout():Promise<void>{if(this.logoutError)throw this.logoutError;}
   users():Promise<UserPage>{const value=new Deferred<UserPage>();this.loads.push(value);return value.promise;}
   async createUser(_input:UserInput):Promise<User>{return this.user;}
-  async updateUser(_id:string,_input:UserInput):Promise<User>{return this.user;}
+  async updateUser(_id:string,input:UserInput):Promise<User>{return {...this.user,...input,version:input.version+1};}
   async deleteUser():Promise<void>{}
   async draft():Promise<Draft>{return {name:'',organization:'',version:0};}
   async saveDraft(draft:Draft):Promise<Draft>{return {...draft,version:draft.version+1};}
@@ -103,6 +103,12 @@ class WorkspaceControllerSuite {
       await controller.table.load();api.preferenceError=new ApiFailure(401,'unauthenticated');await controller.table.save();
       const response=api.loads[0];assert.ok(response);response.resolve(this.page(api.user,1));await old;
       assert.equal(store.snapshot.user,null);assert.equal(store.snapshot.page,null);assert.equal(store.snapshot.tableReady,false);
+    });
+    test('Confirmed self-profile edits update account DTO; capabilities come from the same policy and clear on logout',async()=>{
+      const {api,store,controller}=this.setup();store.patch({view:'settings'});const updated={name:'Confirmed profile',email:api.user.email,role:api.user.role,status:api.user.status,version:api.user.version};
+      assert.deepEqual(controller.availableActions(),new AuthorizationPolicy().actionsFor(api.user));
+      await controller.saveUser(updated,api.user.id);assert.equal(store.snapshot.user?.name,'Confirmed profile');assert.equal(store.snapshot.user?.version,1);
+      await controller.logout();assert.deepEqual(controller.availableActions(),[]);
     });
     test('Command destinations and client actions reflect policy while server authorization stays authoritative',()=>{
       const {api,store,controller}=this.setup();store.patch({user:{...api.user,role:'viewer'}});

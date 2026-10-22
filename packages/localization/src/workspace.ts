@@ -1,6 +1,17 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import type { Locale } from "./index.js";
 const en = Object.freeze({
+  accountEdit: "Edit account profile",
+  capabilities: "Current role capabilities",
+  capabilityHint: "These are role-level capabilities. Record-specific restrictions and every server check still apply. Roles are managed through authorized user edits.",
+  permissionReadUsers: "Read users",
+  permissionCreateUsers: "Create users",
+  permissionUpdateUsers: "Update permitted users",
+  permissionDeleteUsers: "Delete permitted users",
+  permissionExportUsers: "Export authorized users",
+  permissionReadAudit: "Read audit log",
+  permissionWriteDraft: "Save own draft",
+  permissionWritePreferences: "Save own table preferences",
   columns: "Visible columns",
   savedViewHint: "Save search, filters, sort, page and columns for your account. Direct URLs take priority.",
   saveView: "Save table view",
@@ -92,6 +103,17 @@ const en = Object.freeze({
 });
 export type WorkspaceMessageKey = keyof typeof en;
 const ar: Readonly<Record<WorkspaceMessageKey, string>> = Object.freeze({
+  accountEdit: "تعديل بيانات الحساب",
+  capabilities: "صلاحيات الدور الحالي",
+  capabilityHint: "هذه صلاحيات على مستوى الدور؛ تبقى قيود السجل وفحوص الخادم مطبّقة. تُدار الأدوار من تعديل المستخدم المصرّح به.",
+  permissionReadUsers: "عرض المستخدمين",
+  permissionCreateUsers: "إضافة المستخدمين",
+  permissionUpdateUsers: "تعديل المستخدمين المصرّح بهم",
+  permissionDeleteUsers: "حذف المستخدمين المصرّح بهم",
+  permissionExportUsers: "تصدير المستخدمين المصرّح بهم",
+  permissionReadAudit: "قراءة سجل التدقيق",
+  permissionWriteDraft: "حفظ المسودة الخاصة",
+  permissionWritePreferences: "حفظ تفضيلات الجدول الخاصة",
   columns: "الأعمدة الظاهرة",
   savedViewHint: "احفظ البحث والتصفية والفرز والصفحة والأعمدة لحسابك. للرابط المباشر الأولوية.",
   saveView: "حفظ عرض الجدول",
