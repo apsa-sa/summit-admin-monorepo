@@ -21,12 +21,12 @@ class Deferred<T> {
 }
 class FakeWorkspaceApi implements WorkspaceApi {
   readonly user:User={id:randomUUID(),name:'Fixture',email:'fixture@example.test',role:'admin',status:'active',version:0,createdAt:new Date(0).toISOString()};
-  readonly loads:Deferred<UserPage>[]=[];logoutError:Error|null=null;
+  readonly loads:Deferred<UserPage>[]=[];logoutError:Error|null=null;logoutPending:Promise<void>|null=null;
   preferenceLoad:Promise<UserTablePreferences>|null=null;preferenceError:ApiFailure|null=null;preferenceWrites=0;
   endSession():void{}
   async me():Promise<User>{return this.user;}
   async login():Promise<User>{return this.user;}
-  async logout():Promise<void>{if(this.logoutError)throw this.logoutError;}
+  async logout():Promise<void>{if(this.logoutError)throw this.logoutError;if(this.logoutPending)await this.logoutPending;}
   users():Promise<UserPage>{const value=new Deferred<UserPage>();this.loads.push(value);return value.promise;}
   async createUser(_input:UserInput):Promise<User>{return this.user;}
   async updateUser(_id:string,input:UserInput):Promise<User>{return {...this.user,...input,version:input.version+1};}
@@ -66,6 +66,12 @@ class WorkspaceControllerSuite {
       const {api,store,controller,presenter}=this.setup();store.patch({view:'users'});const old=controller.load();
       presenter.error(new ApiFailure(401,'unauthenticated'));const response=api.loads[0];assert.ok(response);response.resolve(this.page(api.user,1));await old;
       assert.equal(store.snapshot.user,null);assert.equal(store.snapshot.page,null);assert.equal(store.snapshot.draftDisabled,true);assert.equal(store.snapshot.busy,false);
+    });
+    test('Pending logout hides private data immediately but remains busy until the server acknowledges',async()=>{
+      const {api,store,controller}=this.setup(),pending=new Deferred<void>();api.logoutPending=pending.promise;
+      store.patch({draft:{name:'Private draft',organization:'Private organization',version:1}});
+      const logout=controller.logout();assert.equal(store.snapshot.user,null);assert.equal(store.snapshot.draft.name,'');assert.equal(store.snapshot.busy,true);
+      pending.resolve();await logout;assert.equal(store.snapshot.busy,false);assert.equal(store.snapshot.logoutFailed,false);
     });
     test('Failed server logout is explicit and retryable; it is never presented as confirmed logout',async()=>{
       const {api,store,controller}=this.setup();api.logoutError=new ApiFailure(0,'network_error');await controller.logout();

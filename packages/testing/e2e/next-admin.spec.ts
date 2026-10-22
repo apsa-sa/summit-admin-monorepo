@@ -379,13 +379,40 @@ class NextAdminBrowserSuite {
             path: `test-results/admin-account-${locale}-${theme}.png`,
             fullPage: true,
           });
+          const activeSession = (
+            await page.context().cookies(this.origin)
+          ).find((cookie) => cookie.name === "summit_session");
+          expect(activeSession).toBeDefined();
+          if (!activeSession)
+            throw new Error("Expected synthetic session before logout");
+          const logout = page.waitForResponse(
+            (response) =>
+              response.url() === `${this.origin}/api/logout` &&
+              response.request().method() === "POST",
+          );
           await page
             .getByRole("button", {
               name: locale === "ar" ? "تسجيل الخروج" : "Sign out",
               exact: true,
             })
             .click();
+          const acknowledgement = await logout;
+          expect(acknowledgement.status()).toBe(200);
+          expect(await acknowledgement.json()).toEqual({ ok: true });
+          await acknowledgement.finished();
+          expect(acknowledgement.headers()["set-cookie"]).toMatch(
+            /summit_session=;.*Max-Age=0/,
+          );
           await expect(page.locator("#admin-email")).toBeVisible();
+          await expect(page.locator("#admin-email")).toBeEnabled();
+          // Verify real server revocation too, independently of cookie clearing in the browser.
+          expect(
+            (
+              await page.request.get(`${this.origin}/api/me`, {
+                headers: { Cookie: `summit_session=${activeSession.value}` },
+              })
+            ).status(),
+          ).toBe(401);
           expect(
             (await page.request.get(`${this.origin}/api/me`)).status(),
           ).toBe(401);

@@ -102,3 +102,27 @@ owner release approval and the original acceptance criteria remain unchanged.
 
 العربية: هذه مرحلة جزئية لإكمال مكونات فعلية واستهلاكها واختبارها؛ لا تعني اكتمال
 المنتج أو اعتماده للإطلاق. لم يُحذف التطبيق القديم أو إثبات Next.js أو سجل العمل.
+
+## First exact-head CI finding — logout test ordering
+
+Run [39865767121](https://github.com/apsa-sa/summit-admin-monorepo/actions/runs/39865767121)
+on `170a21664f5c0b30b0cbfa76e715402ffcfa5304` passed 91 unit/contracts, four
+asset contracts, 30 real-PG results, all security gates and all six strengthened
+Docs cases. The full browser gate failed: 31 passed, two failed in an inherited
+admin logout assertion. It is not an accepted green head.
+
+Downloaded Playwright traces demonstrate the ordering defect in that assertion:
+ar/light logout POST began 22:35:29.007 UTC and took 72.689ms; the test's GET /me
+began 22:35:29.017 and took 16.209ms (200), before logout completed. In en/dark,
+logout began 22:35:44.173 and took 26.951ms; GET began 22:35:44.184 and took
+13.103ms (200), also before acknowledgement. The controller intentionally clears
+private local data before awaiting server revocation, keeping login inputs busy.
+Seeing a login field is not confirmation that the server transaction committed.
+
+Correction retains the exact 401 assertion and adds an explicit matching POST
+response barrier, 200/ok acknowledgement, cleared-cookie contract, enabled login
+field and replay of the old session cookie expecting 401. No fixed sleep, retry,
+skip or weakened assertion. A new deferred-controller unit proves immediate
+privacy clearing while busy remains true until the server acknowledgement.
+The corrected head must run every gate again; this trace diagnosis is not a
+substitute for a passing corrected CI run.
