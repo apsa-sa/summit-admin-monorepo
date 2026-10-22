@@ -1,64 +1,42 @@
-// © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.
-// SPDX-License-Identifier: MIT
-import { Pool, type PoolClient, type QueryResultRow } from 'pg';
-import { randomUUID } from 'node:crypto';
+// © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import { Pool } from 'pg';
+import type { Actor, UserQuery, UserInput, Draft } from '../contracts/index.js';
+import type { PermissionPolicy } from '../contracts/ports.js';
 import { DatabaseConnectionPolicy } from './connection-policy.js';
-import type { Actor, User, UserPage, UserQuery, UserInput, Draft, AuditEvent } from '../contracts/index.js';
-import { DomainError, Validation } from '../core/index.js';
-import { AuthorizationPolicy } from '../core-rbac/index.js';
-interface UserRow extends QueryResultRow { id:string;name:string;email:string;role:unknown;status:unknown;version:unknown;created_at:Date;password_hash:string|null; }
+import { UserRowMapper } from './row-mapper.js';
+import { PostgresIdentityRepository } from './identity-repository.js';
+import { PostgresUserRepository } from './user-repository.js';
+import { PostgresDraftRepository } from './draft-repository.js';
+import { PostgresAuditRepository } from './audit-repository.js';
+import { PostgresSessionGuard } from './session-guard.js';
+
+/** Backward-compatible facade and connection owner; each adapter has one responsibility. */
 export class PostgresRepository {
   readonly pool: Pool;
-  constructor(url: string, policy: DatabaseConnectionPolicy) { this.pool=new Pool(policy.configure(url)); }
-  private user(row: UserRow): User { return {id:row.id,name:row.name,email:row.email,role:Validation.role(row.role),status:Validation.status(row.status),version:Validation.integer(row.version),createdAt:row.created_at.toISOString()}; }
-  async actorForSession(digest:string):Promise<Actor|null> { const result=await this.pool.query<UserRow>("SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.digest=$1 AND s.expires_at>now() AND u.status='active'",[digest]);const row=result.rows[0]; return row?{id:row.id,role:Validation.role(row.role)}:null; }
-  async credentials(email:string):Promise<{user:User;hash:string}|null> {const result=await this.pool.query<UserRow>("SELECT * FROM users WHERE email=$1 AND status='active'",[email]); const row=result.rows[0];return row?.password_hash?{user:this.user(row),hash:row.password_hash}:null;}
-  async session(digest:string,id:string,expectedVersion?:number):Promise<void> {
-    const client=await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      // Same lock order as role changes: user before session. A stale login cannot
-      // issue a new session after credentials were checked against an old version.
-      const result=await client.query<UserRow>("SELECT * FROM users WHERE id=$1 AND status='active' FOR SHARE",[id]);
-      const row=result.rows[0];
-      if(!row || (expectedVersion!==undefined && Validation.integer(row.version)!==expectedVersion))throw new DomainError(401,'unauthenticated');
-      await client.query("INSERT INTO sessions(digest,user_id,expires_at) VALUES($1,$2,now()+interval '8 hours')",[digest,id]);
-      await client.query('COMMIT');
-    } catch(error:unknown) {await client.query('ROLLBACK');throw error;} finally {client.release();}
+  readonly identities: PostgresIdentityRepository;
+  readonly users: PostgresUserRepository;
+  readonly drafts: PostgresDraftRepository;
+  readonly audit: PostgresAuditRepository;
+  constructor(url: string, policy: DatabaseConnectionPolicy) {
+    this.pool = new Pool(policy.configure(url));
+    const mapper = new UserRowMapper();
+    this.identities = new PostgresIdentityRepository(this.pool, mapper);
+    this.audit = new PostgresAuditRepository(this.pool);
+    this.users = new PostgresUserRepository(this.pool, this.identities, mapper, this.audit);
+    this.drafts = new PostgresDraftRepository(this.pool, new PostgresSessionGuard());
   }
-  async logout(digest:string):Promise<void> {await this.pool.query('DELETE FROM sessions WHERE digest=$1',[digest]);}
-  async self(id:string):Promise<User> { const result=await this.pool.query<UserRow>('SELECT * FROM users WHERE id=$1',[id]);const row=result.rows[0];if(!row) throw new DomainError(404,'not_found');return this.user(row); }
-  async list(query:UserQuery,exporting=false):Promise<UserPage> { const values=[`%${query.search.replaceAll('\\','\\\\').replaceAll('%','\\%').replaceAll('_','\\_')}%`,query.role,query.status]; const where="(name ILIKE $1 OR email ILIKE $1) AND ($2='' OR role=$2) AND ($3='' OR status=$3)"; const count=await this.pool.query<{total:string}>(`SELECT count(*) AS total FROM users WHERE ${where}`,values);const total=Validation.integer(Number(count.rows[0]?.total),0);if(exporting&&total>10000) throw new DomainError(422,'export_limit'); const size=exporting?10000:8; const result=await this.pool.query<UserRow>(`SELECT * FROM users WHERE ${where} ORDER BY ${query.sort==='name'?'name ASC':'created_at DESC'},id LIMIT $4 OFFSET $5`,[...values,size,exporting?0:(query.page-1)*size]);return {rows:result.rows.map(row=>this.user(row)),total,page:query.page,pageSize:size}; }
-  async mutate(actor:Actor,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy):Promise<User|null> {
-    return this.executeMutation(actor,id,input,requestId,policy);
-  }
-  /** HTTP callers must bind authorization to the actual session, not a stale Actor. */
-  async mutateForSession(digest:string,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy):Promise<User|null> {
-    const actor=await this.actorForSession(digest);
-    if(!actor)throw new DomainError(401,'unauthenticated');
-    return this.executeMutation(actor,id,input,requestId,policy,digest);
-  }
-  private async executeMutation(actor:Actor,id:string|null,input:UserInput|null,requestId:string,policy:AuthorizationPolicy,digest?:string):Promise<User|null> {
-    const client=await this.pool.connect();try{await client.query('BEGIN');let existing:User|undefined;
-    // Recheck the live actor under the transaction so role changes cannot race writes.
-    const acting=await client.query<UserRow>("SELECT * FROM users WHERE id=$1 AND status='active' FOR SHARE",[actor.id]);const live=acting.rows[0];if(!live) throw new DomainError(401,'unauthenticated');const currentActor={id:live.id,role:Validation.role(live.role)};
-    if(digest!==undefined){
-      // Hold through commit: logout waits for an already-authorized write;
-      // a revocation that completed first makes this operation fail closed.
-      const session=await client.query("SELECT digest FROM sessions WHERE digest=$1 AND user_id=$2 AND expires_at>now() FOR SHARE",[digest,currentActor.id]);
-      if(!session.rows[0])throw new DomainError(401,'unauthenticated');
-    }
-    if(id){const locked=await client.query<UserRow>('SELECT * FROM users WHERE id=$1 FOR UPDATE',[id]);if(!locked.rows[0])throw new DomainError(404,'not_found');existing=this.user(locked.rows[0]);}
-    const action=id?(input?'users:update':'users:delete'):'users:create';policy.require(currentActor,action,existing,input??undefined);
-    const target=id??randomUUID();let output:User|null=null;
-    if(input){if(existing&&input.version!==existing.version)throw new DomainError(409,'version_conflict'); const result=existing?await client.query<UserRow>('UPDATE users SET name=$1,email=$2,role=$3,status=$4,version=version+1 WHERE id=$5 RETURNING *',[input.name,input.email,input.role,input.status,target]):await client.query<UserRow>('INSERT INTO users(id,name,email,role,status) VALUES($1,$2,$3,$4,$5) RETURNING *',[target,input.name,input.email,input.role,input.status]); const row=result.rows[0];if(!row)throw new DomainError(500,'storage_error');output=this.user(row);
-    if(existing&&(existing.role!==input.role||existing.status!==input.status))await client.query('DELETE FROM sessions WHERE user_id=$1',[target]);}
-    else await client.query('DELETE FROM users WHERE id=$1',[target]);
-    await this.audit(client,actor.id,action,target,requestId);await client.query('COMMIT');return output;
-    }catch(error:unknown){await client.query('ROLLBACK');if(typeof error==='object'&&error!==null&&'code' in error&&error.code==='23505')throw new DomainError(409,'email_exists');throw error;}finally{client.release();}
-  }
-  private async audit(client:PoolClient,actor:string,action:string,resource:string,request:string):Promise<void>{await client.query('INSERT INTO audit_events(id,actor_id,action,resource_id,request_id) VALUES($1,$2,$3,$4,$5)',[randomUUID(),actor,action,resource,request]);}
-  async getDraft(id:string):Promise<Draft>{const result=await this.pool.query<Draft>('SELECT name,organization,version FROM drafts WHERE user_id=$1',[id]);return result.rows[0]??{name:'',organization:'',version:0};}
-  async saveDraft(id:string,draft:Draft):Promise<Draft>{const client=await this.pool.connect();try{await client.query('BEGIN');await client.query("INSERT INTO drafts(user_id) VALUES($1) ON CONFLICT DO NOTHING",[id]);const result=await client.query<Draft>('UPDATE drafts SET name=$2,organization=$3,version=version+1 WHERE user_id=$1 AND version=$4 RETURNING name,organization,version',[id,draft.name,draft.organization,draft.version]);if(!result.rows[0])throw new DomainError(409,'version_conflict');await client.query('COMMIT');return result.rows[0];}catch(error:unknown){await client.query('ROLLBACK');throw error;}finally{client.release();}}
-  async events():Promise<AuditEvent[]>{const r=await this.pool.query<{id:string;actor_id:string;action:string;resource_id:string;request_id:string;created_at:Date}>('SELECT * FROM audit_events ORDER BY created_at DESC,id LIMIT 100');return r.rows.map(v=>({id:v.id,actorId:v.actor_id,action:v.action,resourceId:v.resource_id,requestId:v.request_id,createdAt:v.created_at.toISOString()}));}
+  actorForSession(digest:string) { return this.identities.actorForSession(digest); }
+  credentials(email:string) { return this.identities.credentials(email); }
+  session(digest:string,id:string,version?:number) { return this.identities.session(digest,id,version); }
+  logout(digest:string) { return this.identities.logout(digest); }
+  self(id:string) { return this.identities.self(id); }
+  list(query:UserQuery,exporting=false) { return this.users.list(query,exporting); }
+  mutate(actor:Actor,id:string|null,input:UserInput|null,requestId:string,policy:PermissionPolicy) { return this.users.mutate(actor,id,input,requestId,policy); }
+  mutateForSession(digest:string,id:string|null,input:UserInput|null,requestId:string,policy:PermissionPolicy) { return this.users.mutateForSession(digest,id,input,requestId,policy); }
+  getDraft(id:string) { return this.drafts.getDraft(id); }
+  saveDraft(id:string,draft:Draft) { return this.drafts.saveDraft(id,draft); }
+  loadDraftForSession(digest:string,policy:PermissionPolicy) { return this.drafts.loadDraftForSession(digest,policy); }
+  saveDraftForSession(digest:string,draft:Draft,policy:PermissionPolicy) { return this.drafts.saveDraftForSession(digest,draft,policy); }
+  events() { return this.audit.events(); }
+  async health():Promise<void> { await this.pool.query('SELECT 1'); }
 }

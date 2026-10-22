@@ -1,5 +1,5 @@
 # © 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.
-# SUMMIT / قمة — verification only; no database migrations or deployment.
+# SUMMIT / قمة — disposable test migrations only; no deployment.
 name: SUMMIT CI
 
 on:
@@ -130,5 +130,5 @@ jobs:
         run: pnpm proof:build
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
-      - name: SSR, hydration, direction, session and origin contracts
+      - name: Next.js contracts and bilingual reference application journeys
         run: pnpm test:e2e
