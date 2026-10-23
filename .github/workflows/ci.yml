@@ -164,6 +164,11 @@ jobs:
       - name: Next.js contracts and bilingual reference application journeys
         run: pnpm test:e2e
 
+      - name: Independently inspect actual Arabic PDF outputs
+        run: |
+          sudo apt-get install -y --no-install-recommends poppler-utils
+          python3 tooling/scripts/pdf-output-contract.py
+
       - name: Preserve component gallery and browser evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

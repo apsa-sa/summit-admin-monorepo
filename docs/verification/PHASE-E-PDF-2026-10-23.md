@@ -19,7 +19,13 @@ renderer failure and denied viewer, real-PG contention/installation isolation/
 commit+rollback release. Four existing Next journeys now download actual PDFs;
 viewer direct PDF is denied. Two additional actual 101-row/multipage AR/EN
 prints use Chromium and a real isolated database lease. CI retains synthetic PDF artifacts for
-independent text/visual QA. Existing assertions and original apps/proof remain.
+independent text/visual QA. A CI-only Poppler contract checks all six actual
+outputs for embedded Unicode Arabic fonts, repeated page headers, complete unique
+101-row data, tagged/no-JavaScript/no-encryption metadata and text inside page
+bounds. Ubuntu's signed package repository supplies poppler-utils; no additional
+Python package or product runtime dependency. It records a JSON artifact and
+complements raster review, without claiming PDF/UA or security certification.
+Existing assertions and original apps/proof remain.
 
 Local 117 unit/contracts + 4 asset contracts PASS before final exact-head run;
 admin production build PASS at initial provider checkpoint. Final complete builds,
