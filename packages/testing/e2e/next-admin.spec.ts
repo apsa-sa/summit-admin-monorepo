@@ -574,7 +574,22 @@ class NextAdminBrowserSuite {
         .click();
       await expect(
         page.locator("#admin-account-permissions [data-permission]"),
-      ).toHaveCount(3);
+      ).toHaveCount(4);
+      for (const permission of ["users:read", "draft:write", "preferences:write", "files:read"]) {
+        await expect(page.locator(`#admin-account-permissions [data-permission="${permission}"]`)).toHaveCount(1);
+      }
+      for (const permission of ["files:create", "files:delete"]) {
+        await expect(page.locator(`#admin-account-permissions [data-permission="${permission}"]`)).toHaveCount(0);
+      }
+      const ownFiles = await page.request.get(`${this.origin}/api/files`);
+      expect(ownFiles.status()).toBe(200);
+      expect(await ownFiles.json()).toEqual({ rows: [] });
+      expect((await page.request.post(`${this.origin}/api/files`, {
+        headers: { origin: this.origin, "content-type": "image/png" }, data: "not-an-image",
+      })).status()).toBe(403);
+      expect((await page.request.delete(`${this.origin}/api/files/123e4567-e89b-42d3-a456-426614174000`, {
+        headers: { origin: this.origin },
+      })).status()).toBe(403);
       await expect(
         page.locator(
           '#admin-account-permissions [data-permission="users:update"]',

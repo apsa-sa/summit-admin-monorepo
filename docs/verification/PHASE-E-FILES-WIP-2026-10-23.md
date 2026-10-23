@@ -34,7 +34,12 @@ Audit failure rolls back bytes and mutations. No external storage credential.
 - Strict typecheck including new integration source PASS.
 - Added seven real-PostgreSQL scenarios: preservation/preview, ownership, concurrent
   retry, audit rollback, processing admission, expiry/logout, quota/deletion.
-  Execution remains pending until the isolated GitHub PostgreSQL service runs.
+  Executed on a1d7b0f: all 42 PostgreSQL tests PASS, including these scenarios.
+  Run 39902301625 also passed locked installation, security/secret scans and all
+  builds. E2E had 34 PASS and one exact-capability count failure: adding files:read
+  changed the viewer contract from three to four grants. The follow-up preserves
+  exact cardinality, asserts all four grants and forbidden write grants, and adds
+  direct file read/POST/DELETE checks; the complete run must pass on its new head.
 - A local PostgreSQL launch was unavailable: this container maps only UID 0, and
   PostgreSQL requires a non-root user. No test is skipped or replaced with a mock.
 - File browser client, UI, E2E and complete native license review remain NOT IMPLEMENTED.
