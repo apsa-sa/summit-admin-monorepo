@@ -89,7 +89,7 @@ The installation runs Playwright's pinned local Chromium; install its system
 requirements/browser after frozen dependency installation:
 
 ```sh
-pnpm exec playwright install --with-deps chromium
+pnpm --filter @summit/web-admin exec playwright install --with-deps chromium
 ```
 
 This requires an operator permitted to install host packages, or a prepared

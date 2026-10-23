@@ -17,6 +17,8 @@ class PdfExportSuite {
       assert.equal(ar.includes("<script>"), false);
       assert.ok(ar.includes("font-src data:"));
       assert.ok(ar.includes("table-header-group"));
+      assert.ok(ar.includes('<footer dir="ltr">'));
+      assert.ok(ar.includes("white-space:pre-wrap"));
       assert.ok(ar.includes("مشاهد"));
       const en = new PdfDocument(printFontCss).render([this.user], "en");
       assert.ok(en.includes('lang="en" dir="ltr"'));

@@ -1,5 +1,5 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
-import { WorkspaceMessages } from "@summit/localization";
+import { WorkspaceMessages, LocaleFormatter } from "@summit/localization";
 import { TokenCatalog } from "@summit/design-tokens";
 import type { User } from "../contracts/index.js";
 import type { ExportLocale } from "../contracts/exports.js";
@@ -24,6 +24,6 @@ export class PdfDocument {
     }).join("")}</tr>`).join("");
     const palette = TokenCatalog.light;
     return `<!doctype html><html lang="${locale}" dir="${locale === "ar" ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src 'none'; base-uri 'none'; form-action 'none'"><title>SUMMIT</title><style>${this.fontCss}
-@page{size:A4 landscape;margin:14mm}*{box-sizing:border-box}body{font-family:'Noto Sans Arabic',sans-serif;font-size:10pt;line-height:1.6;color:${palette.foreground};background:white}h1{font-size:18pt;color:${palette.primary}}table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid ${palette.border};padding:6pt;text-align:start;overflow-wrap:anywhere;vertical-align:top}th{font-weight:600;background:${palette.muted}}td:nth-child(2),th:nth-child(2){width:34%}p{margin:5pt 0 12pt}footer{font-size:8pt;margin-top:12pt}</style></head><body><h1>SUMMIT / قمة</h1><p>${this.text(locale === "ar" ? "تصدير المستخدمين المصرّح به" : "Authorized user export")} · ${users.length}</p><table><thead><tr>${columns.map(value => `<th scope="col">${this.text(value)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table><footer>© 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.</footer></body></html>`;
+@page{size:A4 landscape;margin:14mm}*{box-sizing:border-box}body{font-family:'Noto Sans Arabic',sans-serif;font-size:10pt;line-height:1.6;color:${palette.foreground};background:white}h1{font-size:18pt;color:${palette.primary}}table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid ${palette.border};padding:6pt;text-align:start;overflow-wrap:anywhere;vertical-align:top;white-space:pre-wrap}th{font-weight:600;background:${palette.muted}}td:nth-child(2),th:nth-child(2){width:34%}p{margin:5pt 0 12pt}footer{font-size:8pt;margin-top:12pt}</style></head><body><h1>SUMMIT / قمة</h1><p>${this.text(locale === "ar" ? "تصدير المستخدمين المصرّح به" : "Authorized user export")} · ${new LocaleFormatter(locale).number(users.length)}</p><table><thead><tr>${columns.map(value => `<th scope="col">${this.text(value)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table><footer dir="ltr">© 2026 apsa.sa — Arab Planets Summit Architectural — Eng: Samer alhamid.</footer></body></html>`;
   }
 }
