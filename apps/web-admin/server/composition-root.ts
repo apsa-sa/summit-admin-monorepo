@@ -1,4 +1,12 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import { AttachmentHttpController } from './attachment-controller.js';
+import { BoundedBody } from './bounded-body.js';
+import { AttachmentApplicationService } from '../../../packages/application/attachments.js';
+import { AttachmentLimits, AttachmentMedia } from '../../../packages/contracts/attachments.js';
+import { AttachmentValidation } from '../../../packages/core/attachment-validation.js';
+import { AttachmentClassifier } from '../../../packages/files/classifier.js';
+import { SharpAttachmentPreparer } from '../../../packages/files/preparer.js';
+import { PostgresAttachmentRepository } from '../../../packages/data-access/attachment-repository.js';
 import { PdfExporter } from '../../../packages/exports/pdf.js';
 import { PdfDocument } from '../../../packages/exports/pdf-document.js';
 import { ChromiumPdfPrinter } from '../../../packages/exports/chromium-pdf.js';
@@ -42,7 +50,10 @@ export class AdminCompositionRoot {
       new UserApplicationService(this.repository.users,sessions,policy,new CsvExporter(),[new SpreadsheetExporter(new SpreadsheetText()),new PdfExporter(new PdfDocument(printFontCss),new ChromiumPdfPrinter(),new PostgresExportLease(this.repository.pool))]),
       new DraftApplicationService(this.repository.drafts,policy),new AuditApplicationService(this.repository.audit,sessions,policy),
       this.repository,new SessionCookie(tokens,parsed.protocol==='https:'),body,logger,origin,
-      new TablePreferenceService(new PostgresTablePreferenceRepository(this.repository.pool,new PostgresSessionGuard(),new TablePreferenceValidation()),policy,new TablePreferenceValidation()));
+      new TablePreferenceService(new PostgresTablePreferenceRepository(this.repository.pool,new PostgresSessionGuard(),new TablePreferenceValidation()),policy,new TablePreferenceValidation()),
+      new AttachmentHttpController(new AttachmentApplicationService(
+        new PostgresAttachmentRepository(this.repository.pool,new PostgresSessionGuard(),this.repository.audit),sessions,policy,
+        new AttachmentValidation(),new SharpAttachmentPreparer(new AttachmentClassifier(),new AttachmentValidation()),new AttachmentMedia()),new BoundedBody(AttachmentLimits.bytes)));
     this.server=new NodeAdminServer(this.controller,new PublicAssets(),body,logger,origin);
   }
   async close():Promise<void>{await this.repository.pool.end();}

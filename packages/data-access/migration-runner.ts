@@ -8,6 +8,7 @@ export class MigrationRunner {
     "001_initial.sql",
     "002_login_attempts.sql",
     "003_table_preferences.sql",
+    "004_private_attachments.sql",
   ]);
   async apply(pool: Pool): Promise<void> {
     const migrations = await Promise.all(

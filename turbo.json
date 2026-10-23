@@ -28,7 +28,8 @@
         "$TURBO_ROOT$/packages/exports/*.ts",
         "$TURBO_ROOT$/packages/observability/*.ts",
         "$TURBO_ROOT$/packages/security/*.ts",
-        "$TURBO_ROOT$/packages/data-access/migrations/*.sql"
+        "$TURBO_ROOT$/packages/data-access/migrations/*.sql",
+        "$TURBO_ROOT$/packages/files/*.ts"
       ],
       "outputs": [
         ".next/**",

@@ -16,7 +16,8 @@
     "@summit/ui": "workspace:*",
     "@summit/localization": "workspace:*",
     "@summit/design-tokens": "workspace:*",
-    "playwright": "1.64.1"
+    "playwright": "1.64.1",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

@@ -1,4 +1,5 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
+import type { AttachmentHttpController } from "./attachment-controller.js";
 import { randomUUID } from 'node:crypto';
 import type { HealthStore } from '../../../packages/contracts/ports.js';
 import { DomainError } from '../../../packages/core/index.js';
@@ -14,7 +15,7 @@ export class AdminHttpController {
   constructor(private readonly auth:AuthenticationService,private readonly users:UserApplicationService,
     private readonly drafts:DraftApplicationService,private readonly audit:AuditApplicationService,
     private readonly health:HealthStore,private readonly cookie:SessionCookie,private readonly body:JsonBody,
-    private readonly logger:SafeLogger,private readonly origin:string,private readonly tablePreferences:TablePreferenceService) {}
+    private readonly logger:SafeLogger,private readonly origin:string,private readonly tablePreferences:TablePreferenceService,private readonly attachments:AttachmentHttpController|null=null) {}
   private json(value:unknown,headers:Headers,status=200):Response {return Response.json(value,{status,headers});}
   async handle(request:Request,peer:string):Promise<Response> {
     const requestId=randomUUID(); const headers=new Headers({'X-Request-Id':requestId,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
@@ -37,6 +38,10 @@ export class AdminHttpController {
       }
       // Authenticate unknown protected routes too; unauthenticated requests reveal no route details.
       await this.auth.authenticate(digest);
+      if(pathname==='/api/files'||pathname.startsWith('/api/files/')){
+        if(!this.attachments)throw new DomainError(404,'not_found');
+        return await this.attachments.handle(request,digest,requestId,headers);
+      }
       if(pathname==='/api/me'&&method==='GET')return this.json({user:await this.auth.me(digest)},headers);
       if(pathname==='/api/preferences/users'){
         if(method==='GET')return this.json(await this.tablePreferences.load(digest),headers);
