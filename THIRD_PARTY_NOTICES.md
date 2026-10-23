@@ -57,3 +57,14 @@ NOTICE copies are in docs/licenses/playwright-1.64.1-*.txt. Its ThirdPartyNotice
 remain distributed with the dependency. Chromium is installed by the operator
 using the pinned Playwright installer; its own bundled notices apply. PDF embeds
 Noto Sans Arabic 5.2.8 under SIL OFL-1.1, including its existing packaged notice.
+
+## Private file preparation (work in progress)
+
+Sharp 0.35.5 is now an explicit runtime dependency of the file adapter and Next
+admin, and a development dependency for real image fixtures. It was already
+resolved by the pinned Next version; package/snapshot resolutions are unchanged.
+Sharp is Apache-2.0; its exact license is retained in
+`docs/licenses/sharp-0.35.5-LICENSE.txt`. Native libvips and its bundled codecs
+retain their separate licenses (including LGPL obligations); the final recursive
+license review and SBOM remain release gates. This notice does not certify every
+native codec as MIT or grant rights beyond the upstream licenses.

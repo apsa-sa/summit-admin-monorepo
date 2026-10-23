@@ -10,6 +10,9 @@ export class AuthorizationPolicy {
       "users:update",
       "users:delete",
       "users:export",
+      "files:read",
+      "files:create",
+      "files:delete",
       "audit:read",
       "draft:write",
       "preferences:write",
@@ -18,10 +21,13 @@ export class AuthorizationPolicy {
       "users:read",
       "users:update",
       "users:export",
+      "files:read",
+      "files:create",
+      "files:delete",
       "draft:write",
       "preferences:write",
     ],
-    viewer: ["users:read", "draft:write", "preferences:write"],
+    viewer: ["users:read", "draft:write", "preferences:write", "files:read"],
   };
   /** Coarse capabilities only. Resource/input restrictions still apply in require(). */
   actionsFor(actor: Actor): readonly string[] {
