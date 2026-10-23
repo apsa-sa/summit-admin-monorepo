@@ -107,3 +107,17 @@ body {
   white-space: nowrap;
   overflow-wrap: normal;
 }
+
+/* Links retain explicit navigation placement, color and keyboard focus. */
+.docs-shell a,
+.docs-shell a:visited,
+.docs-shell a:hover,
+.docs-shell a:focus {
+  color: var(--summit-primary);
+  text-decoration: none;
+}
+.docs-shell a:focus-visible {
+  outline: 2px solid var(--summit-primary);
+  outline-offset: 3px;
+  border-radius: var(--summit-radius-sm);
+}
