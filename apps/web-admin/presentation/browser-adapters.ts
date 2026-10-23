@@ -58,7 +58,7 @@ export class BrowserNavigation {
 export class BrowserDownloads implements FileDownloadPort {
   private readonly urls = new Map<string, number>();
   save(file: ExportDownload): void {
-    if (!/^summit-users\.(csv|xlsx)$/.test(file.filename))
+    if (!/^summit-users\.(csv|xlsx|pdf)$/.test(file.filename))
       throw new TypeError("Invalid download filename");
     const url = URL.createObjectURL(
       new Blob([file.bytes], { type: file.contentType }),

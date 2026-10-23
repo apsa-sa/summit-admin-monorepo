@@ -23,3 +23,8 @@ certified. Reduced motion is supported. Builds run through `pnpm build:packages`
 
 العربية: رموز مشتركة بالهوية المعتمدة، مع خط محلي مرخّص ووضعين فاتح وداكن.
 الألوان الزخرفية لا تُستخدم للنصوص الأساسية أو حدود الحقول المطلوبة للوضوح.
+
+The `@summit/design-tokens/print-fonts` ESM export provides `printFontCss: string`
+with the same licensed local font faces embedded for offline PDF rendering. It is
+a server print asset; do not include it in an interactive client bundle. The build
+produces actual JavaScript/declarations and retains the OFL notice in the package.

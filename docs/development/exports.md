@@ -1,8 +1,8 @@
 <!-- © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT -->
-# CSV export contract / عقد التصدير
+# Tabular export contracts / عقود التصدير
 
-CSV and actual XLSX are implemented. PDF remains a separate unimplemented format
-at this checkpoint; no PDF control is advertised.
+CSV/XLSX retain their verified contracts. PDF adds a local Chromium renderer;
+its exact-head browser and visual acceptance must be recorded before approval.
 
 Authenticate to the installation, then use the same-origin session cookie:
 
@@ -43,7 +43,7 @@ saving bytes. Add new formats behind an explicit typed exporter contract and
 retain all existing response/security/consumer regression tests.
 
 العربية: يوضح القسم الأول عقد CSV المتوافق مع التطبيق السابق. تُراجع الصلاحية على الخادم، ويشمل التصدير
-النتائج المصفاة بحد 10 آلاف سجل. الأخطاء JSON بلا ترويسة تنزيل؛ PDF وقياس
+النتائج المصفاة بحد 10 آلاف سجل. الأخطاء JSON بلا ترويسة تنزيل؛ التحقق النهائي من PDF وقياس
 الأداء على 100 ألف سجل أعمال متبقية، ولا تُعرض على أنها مكتملة.
 
 ## Excel / XLSX
@@ -75,4 +75,45 @@ provider account or subscription is required.
 
 العربية: ينشئ Excel ملف XLSX فعلياً بالنطاق والصلاحية نفسيهما، مع خلايا نصية
 واتجاه عربي وعناوين مترجمة. لا يُحوّل المدخلات إلى صيغ، ولا يخرج المستخدم من
-الواجهة عند فشل التنزيل. PDF ما زال مرحلة مستقلة تالية في هذه النقطة.
+الواجهة عند فشل التنزيل. تتطلب إضافة PDF اعتماد اختبارات الطباعة الفعلية أدناه.
+
+## Arabic PDF and operator setup
+
+`GET /api/users/export?format=pdf&locale=ar` applies the identical server permission,
+filters and sort, returning `application/pdf` and `summit-users.pdf`. At most 1,000
+filtered records are rendered; `pdf_export_limit` is a 422 JSON response, never a
+truncated document. Narrow the filters or use CSV/Excel (10k cap). The reference
+UI validates the PDF signature and uses the same controlled download lifecycle.
+
+The installation runs Playwright's pinned local Chromium; install its system
+requirements/browser after frozen dependency installation:
+
+```sh
+pnpm --filter @summit/web-admin exec playwright install --with-deps chromium
+```
+
+This requires an operator permitted to install host packages, or a prepared
+container. No remote PDF service, provider account or subscription is required.
+Missing/incompatible browser runtime returns sanitized 503 JSON rather than a
+corrupt download. Install in the same runtime user/environment as the server.
+Deploy Chromium using your host/container isolation and resource policy; the
+reference prints only its own escaped HTML, never arbitrary URLs or input HTML.
+
+Fonts are embedded at package build time from the existing licensed Noto Sans
+Arabic files; no network font request or runtime filesystem font path is needed.
+Arabic/Latin mixed text uses bidi isolation. Headers repeat on printed pages;
+PDF output uses the approved light palette for legibility independent of UI mode.
+Printing waits for fonts, owns/closes its browser/context, blocks script and network
+access, excludes application secrets from the browser process environment, has a
+10s render watchdog after a 5s launch deadline and a 16 MB result cap. The client
+allows a bounded 20s request for PDF. Database-backed nonblocking advisory admission
+permits one concurrent PDF per installation, even across separate Next request
+roots; another installation is independent. Busy returns 429 with explicit retry,
+no hidden global process pool or database migration. Rendering errors release the
+lease by rollback and close owned browser resources. Normal server DB credentials
+remain subject to the existing TLS/least-privilege policy.
+
+Generated PDFs are downloads, not retained by the application. The four bilingual/
+theme journeys save synthetic PDFs only as short-lived CI verification artifacts.
+PDF visual/text review and host security/resource verification remain explicit
+acceptance evidence; the presence of a `%PDF-` prefix alone is insufficient.

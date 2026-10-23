@@ -167,6 +167,28 @@ class ExportContractFixture {
 }
 class ExportResponseSuite {
   register(): void {
+    test("PDF protocol preserves binary metadata and refuses renderer failures/viewer access as JSON", async () => {
+      let rendered = 0;
+      const fixture = new ExportContractFixture([{ format: "pdf", render: async () => {
+        rendered++; return new TextEncoder().encode("%PDF-synthetic protocol fixture").buffer;
+      } }]);
+      const response = await fixture.response("?format=pdf&locale=ar");
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get("content-type"), "application/pdf");
+      assert.equal(response.headers.get("content-disposition"), 'attachment; filename="summit-users.pdf"');
+      assert.equal((await response.text()).startsWith("%PDF-"), true);
+      fixture.store.actor = { id: fixture.store.user.id, role: "viewer" };
+      const denied = await fixture.response("?format=pdf");
+      assert.equal(denied.status, 403);
+      assert.equal(denied.headers.has("content-disposition"), false);
+      assert.equal(rendered, 1);
+      const broken = new ExportContractFixture([{ format: "pdf", render: async () => { throw new DomainError(503, "pdf_render_failed"); } }]);
+      const failure = await broken.response("?format=pdf");
+      assert.equal(failure.status, 503);
+      assert.equal(failure.headers.has("content-disposition"), false);
+      assert.equal((await failure.json()).error, "pdf_render_failed");
+    });
+
     test("CSV success alone carries attachment/MIME, locale headers and formula-safe content", async () => {
       const fixture = new ExportContractFixture();
       for (const locale of ["ar", "en"]) {

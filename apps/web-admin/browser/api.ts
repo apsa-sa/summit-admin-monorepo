@@ -51,13 +51,14 @@ export class AdminApiClient {
     path: string,
     decode: (response: Response) => Promise<T>,
     init: RequestInit = {},
+    timeoutMs = this.timeoutMs,
   ): Promise<T> {
     const session = this.scope.signal,
       request = new AbortController();
     const cancel = () => request.abort();
     session.addEventListener("abort", cancel, { once: true });
     if (session.aborted) cancel();
-    const timeout = setTimeout(cancel, this.timeoutMs);
+    const timeout = setTimeout(cancel, timeoutMs);
     try {
       let response: Response;
       // Native browser fetch requires its global receiver; storing it as a class
@@ -199,9 +200,9 @@ export class AdminApiClient {
       const contentType =
         format === "csv"
           ? "text/csv; charset=utf-8"
-          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+          : format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       const filename =
-        format === "csv" ? "summit-users.csv" : "summit-users.xlsx";
+        format === "csv" ? "summit-users.csv" : format === "pdf" ? "summit-users.pdf" : "summit-users.xlsx";
       if (
         response.headers.get("content-type") !== contentType ||
         response.headers.get("content-disposition") !==
@@ -234,11 +235,11 @@ export class AdminApiClient {
         bytes.set(chunk, offset);
         offset += chunk.byteLength;
       }
-      const signature = format === "csv" ? [239, 187, 191] : [80, 75, 3, 4];
+      const signature = format === "csv" ? [239, 187, 191] : format === "pdf" ? [37, 80, 68, 70, 45] : [80, 75, 3, 4];
       if (!signature.every((value, index) => bytes[index] === value))
         throw new TypeError("Invalid download signature");
       return { bytes: bytes.buffer, filename, contentType };
-    });
+    }, {}, format === "pdf" ? Math.max(this.timeoutMs, 20000) : this.timeoutMs);
   }
   exportUrl(
     locale: "ar" | "en",

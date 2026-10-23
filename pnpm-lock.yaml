@@ -109,6 +109,9 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
   apps/web-admin:
     dependencies:
+      playwright:
+        specifier: 1.64.1
+        version: 1.64.1
       next: *id001
       react: *id002
       react-dom: *id003
@@ -133,6 +136,12 @@ importers:
         version: 5.2.8
   packages/exports:
     dependencies:
+      '@summit/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
+      playwright:
+        specifier: 1.64.1
+        version: 1.64.1
       fflate:
         specifier: 0.8.3
         version: 0.8.3

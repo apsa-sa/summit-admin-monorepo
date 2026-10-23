@@ -291,6 +291,18 @@ class NextAdminBrowserSuite {
             locale,
             edited,
           );
+          const pdfDownload = page.waitForEvent("download");
+          await page.getByRole("link", {
+            name: locale === "ar" ? "تصدير PDF المصرّح به" : "Export authorized PDF", exact: true,
+          }).click();
+          const pdf = await pdfDownload;
+          expect(pdf.suggestedFilename()).toBe("summit-users.pdf");
+          const pdfPath = await pdf.path();
+          if (!pdfPath) throw new Error("Missing PDF download");
+          const pdfBytes = await readFile(pdfPath);
+          expect(pdfBytes.subarray(0, 5).toString()).toBe("%PDF-");
+          expect(pdfBytes.length).toBeGreaterThan(1000);
+          await pdf.saveAs(`test-results/users-${locale}-${theme}.pdf`);
           const failedExport = await page.request.get(
             `${this.origin}/api/users/export?sort=unsupported`,
           );
@@ -500,6 +512,10 @@ class NextAdminBrowserSuite {
       );
       expect(forbiddenExport.status()).toBe(403);
       expect(forbiddenExport.headers()["content-disposition"]).toBeUndefined();
+      await expect(page.getByRole("link", { name: "تصدير PDF المصرّح به", exact: true })).toHaveCount(0);
+      const forbiddenPdf = await page.request.get(`${this.origin}/api/users/export?format=pdf`);
+      expect(forbiddenPdf.status()).toBe(403);
+      expect(forbiddenPdf.headers()["content-disposition"]).toBeUndefined();
       await expect(
         page.locator('.admin-users-table input[type="checkbox"]'),
       ).toHaveCount(0);

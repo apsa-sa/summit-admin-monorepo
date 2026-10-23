@@ -5,6 +5,8 @@
   "type": "module",
   "dependencies": {
     "fflate": "0.8.3",
-    "@summit/localization": "workspace:*"
+    "@summit/localization": "workspace:*",
+    "playwright": "1.64.1",
+    "@summit/design-tokens": "workspace:*"
   }
 }
