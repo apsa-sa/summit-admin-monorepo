@@ -1,5 +1,6 @@
 // © 2026 APSA / eng:samer alhamid — apsa.sa. SPDX-License-Identifier: MIT
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
+import { AttachmentLimits } from "../../../packages/contracts/attachments.js";
 import { randomUUID } from 'node:crypto';
 import { DomainError } from '../../../packages/core/index.js';
 import { SafeLogger } from '../../../packages/observability/index.js';
@@ -26,7 +27,7 @@ export class NodeAdminServer {
           for await(const raw of req){
             const chunk:unknown=raw;
             if(!Buffer.isBuffer(chunk))throw new DomainError(400,'invalid_input');
-            size+=chunk.byteLength;if(size>this.body.limit)throw new DomainError(413,'body_too_large');
+            size+=chunk.byteLength;if(size>(method==='POST'&&url.pathname==='/api/files'?AttachmentLimits.bytes:this.body.limit))throw new DomainError(413,'body_too_large');
             chunks.push(chunk);
           }
           const bytes=Buffer.concat(chunks);

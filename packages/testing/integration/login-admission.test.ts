@@ -31,7 +31,7 @@ class LoginAdmissionIntegrationSuite {
               await new MigrationRunner().apply(pool);
               assert.equal(
                 (await pool.query("SELECT * FROM schema_migrations")).rowCount,
-                3,
+                4,
               );
               assert.equal(
                 (await repository.self(id)).name,
