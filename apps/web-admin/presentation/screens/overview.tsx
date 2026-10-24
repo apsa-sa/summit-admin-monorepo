@@ -16,7 +16,7 @@ export class OverviewScreen extends WorkspaceScreen {
           <>
             <p>{m.t("count")}</p>
             <strong className="admin-metric">
-              {s.page ? this.format().number(s.page.total) : "—"}
+              {s.page ? this.format().number(s.page.total) : "."}
             </strong>
             <h3>{m.t("source")}</h3>
             <p>{m.t("sourceHint")}</p>
